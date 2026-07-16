@@ -8,9 +8,17 @@
   --text-dim: #756e5c;
   --border: #e4dcc5;
   --border-soft: #ece5d2;
-  --accent: #16a34a;
-  --accent-strong: #15803d;
-  --accent-glow: rgba(22, 163, 74, 0.22);
+  /* GoMax brand: deep navy + terracotta-coral. --accent is the brand
+     color (buttons, active states, highlights) — kept deliberately
+     separate from --success (tick/pass green) so "done" still reads at
+     a glance on the factory floor instead of blending into the brand
+     color used for every button. */
+  --accent: #d9754a;
+  --accent-strong: #c15f39;
+  --accent-glow: rgba(217, 117, 74, 0.28);
+  --success: #16a34a;
+  --success-strong: #15803d;
+  --success-glow: rgba(22, 163, 74, 0.18);
   --danger: #dc2626;
   --danger-bg: #fee2e2;
   --warning: #b45309;
@@ -20,9 +28,9 @@
   --radius: 16px;
   --radius-sm: 12px;
   /* The top nav bar stays dark regardless of the rest of the (now light,
-     cream) theme — its own fixed palette, not swapped by a theme toggle. */
-  --topbar-bg: #141d33;
-  --topbar-surface: #1c2846;
+     cream) theme — GoMax's own navy, not swapped by a theme toggle. */
+  --topbar-bg: #0f1e3d;
+  --topbar-surface: #17284d;
   --topbar-text: #f4f6fb;
   --topbar-text-dim: #8b96ad;
   color-scheme: light;
@@ -96,6 +104,12 @@ input {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.title-highlight {
+  background: none;
+  -webkit-text-fill-color: var(--accent);
+  color: var(--accent);
 }
 
 .subtitle {
@@ -184,14 +198,14 @@ input {
   gap: 8px;
   padding: 14px 18px;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14), rgba(16, 185, 129, 0.05));
-  border: 1px solid var(--accent-strong);
+  background: linear-gradient(135deg, var(--success-glow), transparent);
+  border: 1px solid var(--success-strong);
 }
 
 .stat-banner-value {
   font-size: 24px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--success-strong);
   letter-spacing: -0.02em;
 }
 
@@ -421,7 +435,7 @@ textarea.field-input {
 .category-tab.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #06280f;
+  color: #fff;
 }
 
 /* Grey/White variant cards — each variant is its own card, colored to
@@ -522,7 +536,7 @@ textarea.field-input {
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #052e1c;
+  color: #fff;
   box-shadow: 0 8px 20px -6px var(--accent-glow);
 }
 
@@ -678,9 +692,9 @@ textarea.field-input {
 }
 
 .icon-btn-check {
-  border-color: var(--accent-strong);
-  color: var(--accent);
-  background: rgba(52, 211, 153, 0.1);
+  border-color: var(--success-strong);
+  color: var(--success);
+  background: var(--success-glow);
 }
 
 .icon-btn-cross {
@@ -700,8 +714,8 @@ textarea.field-input {
 }
 
 .status-added {
-  background: rgba(52, 211, 153, 0.14);
-  color: var(--accent);
+  background: var(--success-glow);
+  color: var(--success-strong);
 }
 
 .status-skipped {
@@ -734,14 +748,14 @@ textarea.field-input {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.1));
-  border: 1px solid var(--accent-strong);
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--success-glow), transparent);
+  border: 1px solid var(--success-strong);
+  color: var(--success-strong);
   font-size: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 0 8px var(--success-glow);
   animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 

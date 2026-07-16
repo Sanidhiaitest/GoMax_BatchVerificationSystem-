@@ -55,7 +55,9 @@ export default function FormulationSelect() {
       />
 
       <div className="greeting">
-        <h1 className="title">Hello, {firstName}! 👋</h1>
+        <h1 className="title">
+          <span className="title-highlight">Hello,</span> {firstName}! 👋
+        </h1>
         <p className="subtitle">Ready to start a batch?</p>
       </div>
 

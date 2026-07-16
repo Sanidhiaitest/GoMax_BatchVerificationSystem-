@@ -52,7 +52,9 @@ export default function TesterQueue() {
       />
 
       <div className="greeting">
-        <h1 className="title">Hello, {firstName}! 🧪</h1>
+        <h1 className="title">
+          <span className="title-highlight">Hello,</span> {firstName}! 🧪
+        </h1>
         <p className="subtitle">Batches waiting for testing</p>
       </div>
 
