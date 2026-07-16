@@ -66,9 +66,38 @@ export default function BatchList() {
     [batches],
   )
 
+  const inProgressCount = useMemo(() => batches.filter((b) => b.status === 'in_progress').length, [batches])
+  const criticalCount = useMemo(
+    () => batches.filter((b) => b.batch_flags.some((f) => f.severity === 'critical')).length,
+    [batches],
+  )
+
   return (
     <div className="page">
       <h1 className="page-title">Batches</h1>
+
+      {!loading && batches.length > 0 && (
+        <div className="stat-row">
+          <div className="stat-card">
+            <span className="stat-card-value">{batches.length}</span>
+            <span className="stat-card-label">Total batches</span>
+          </div>
+          <div className="stat-card stat-card-accent">
+            <span className="stat-card-value">{inProgressCount}</span>
+            <span className="stat-card-label">In progress</span>
+          </div>
+          <div className="stat-card stat-card-warning">
+            <span className="stat-card-value">{flagged.length}</span>
+            <span className="stat-card-label">Flagged</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-card-value" style={criticalCount > 0 ? { color: 'var(--danger)' } : undefined}>
+              {criticalCount}
+            </span>
+            <span className="stat-card-label">Critical</span>
+          </div>
+        </div>
+      )}
 
       <div className="filter-bar">
         <label className="field">
