@@ -1,0 +1,58 @@
+export interface Formulation {
+  id: string
+  code: string
+  name: string | null
+  active: boolean
+}
+
+export interface FormulationMaterial {
+  id: string
+  formulation_id: string
+  description: string
+  sort_order: number
+  active: boolean
+}
+
+export interface SupervisorPublic {
+  id: string
+  name: string
+  active: boolean
+}
+
+export type BatchMaterialStatus = 'pending' | 'added' | 'skipped'
+
+export interface BatchMaterial {
+  id: string
+  description: string
+  sort_order: number
+  status: BatchMaterialStatus
+  quantity: number | null
+  ticked_at: string | null
+  suspicious: boolean
+  gap_seconds: number | null
+}
+
+export type FlagSeverity = 'info' | 'warning' | 'critical'
+
+export interface BatchFlag {
+  id: string
+  batch_id: string
+  source: 'rule' | 'ai'
+  severity: FlagSeverity
+  code: string | null
+  message: string
+  created_at: string
+}
+
+export interface BatchListRow {
+  id: string
+  batch_number: string
+  batch_date: string
+  mason_name: string
+  status: 'in_progress' | 'submitted'
+  started_at: string
+  submitted_at: string | null
+  formulations: { code: string; name: string | null } | null
+  supervisors: { name: string } | null
+  batch_flags: { id: string; severity: FlagSeverity }[]
+}
