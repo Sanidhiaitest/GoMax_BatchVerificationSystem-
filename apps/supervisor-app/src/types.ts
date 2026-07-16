@@ -2,6 +2,9 @@ export interface Formulation {
   id: string
   code: string
   name: string | null
+  category: string | null
+  base_name: string | null
+  variant: string | null
 }
 
 export interface FormulationMaterial {

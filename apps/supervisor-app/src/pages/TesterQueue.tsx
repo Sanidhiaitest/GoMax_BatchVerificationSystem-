@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
 import Avatar from '../Avatar'
+import IdentityTopBar from '../IdentityTopBar'
 
 interface QueueRow {
   id: string
@@ -43,20 +44,12 @@ export default function TesterQueue() {
 
   return (
     <div className="screen">
-      <header className="top-bar">
-        <div>
-          <p className="hint-text">Signed in</p>
-          <p className="top-bar-title">{supervisor?.name}</p>
-        </div>
-        <div className="top-bar-actions">
-          <button className="link-btn" onClick={() => navigate('/testing/history')}>
-            History
-          </button>
-          <button className="link-btn" onClick={logout}>
-            Switch
-          </button>
-        </div>
-      </header>
+      <IdentityTopBar
+        name={supervisor?.name ?? ''}
+        historyLabel="History"
+        onHistory={() => navigate('/testing/history')}
+        onLogout={logout}
+      />
 
       <div className="greeting">
         <h1 className="title">Hello, {firstName}! 🧪</h1>

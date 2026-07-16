@@ -763,6 +763,18 @@ a {
   border-top: 1px solid var(--border);
 }
 
+.grouping-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.grouping-editor .field-input {
+  min-width: 110px;
+}
+
 .material-editor-row {
   display: flex;
   align-items: center;

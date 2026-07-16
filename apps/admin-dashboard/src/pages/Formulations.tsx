@@ -16,7 +16,7 @@ export default function Formulations() {
     setLoading(true)
     const { data, error } = await supabase
       .from('formulations')
-      .select('id, code, name, active')
+      .select('id, code, name, active, category, base_name, variant')
       .order('code')
     if (error) setError(error.message)
     else setFormulations(data ?? [])
@@ -89,16 +89,77 @@ export default function Formulations() {
                 <span className="list-item-code">
                   {f.code} {!f.active && <span className="hint-text">(inactive)</span>}
                 </span>
-                {f.name && <span className="list-item-sub">{f.name}</span>}
+                <span className="list-item-sub">
+                  {[f.category, f.base_name && f.variant ? `${f.base_name} · ${f.variant}` : null, f.name]
+                    .filter(Boolean)
+                    .join(' · ') || 'Not categorized'}
+                </span>
               </div>
             </button>
             <button className="link-btn" onClick={() => toggleActive(f)}>
               {f.active ? 'Deactivate' : 'Activate'}
             </button>
-            {expanded === f.id && <MaterialsEditor formulationId={f.id} />}
+            {expanded === f.id && (
+              <>
+                <GroupingEditor formulation={f} onSaved={load} />
+                <MaterialsEditor formulationId={f.id} />
+              </>
+            )}
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+function GroupingEditor({ formulation, onSaved }: { formulation: Formulation; onSaved: () => void }) {
+  const [category, setCategory] = useState(formulation.category ?? '')
+  const [baseName, setBaseName] = useState(formulation.base_name ?? '')
+  const [variant, setVariant] = useState(formulation.variant ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function save() {
+    setSaving(true)
+    setError(null)
+    const { error } = await supabase
+      .from('formulations')
+      .update({
+        category: category.trim() || null,
+        base_name: baseName.trim() || null,
+        variant: variant.trim() || null,
+      })
+      .eq('id', formulation.id)
+    setSaving(false)
+    if (error) setError(error.message)
+    else onSaved()
+  }
+
+  return (
+    <div className="grouping-editor">
+      <p className="hint-text">
+        Category groups formulations into tabs on the supervisor app (e.g. "Adhesives", "Grout"). Base
+        name + variant merge Grey/White pairs into one row with two small pills — leave both blank for a
+        standalone formulation.
+      </p>
+      <div className="inline-form">
+        <label className="field">
+          <span className="field-label">Category</span>
+          <input className="field-input" placeholder="e.g. Adhesives" value={category} onChange={(e) => setCategory(e.target.value)} />
+        </label>
+        <label className="field">
+          <span className="field-label">Base name</span>
+          <input className="field-input" placeholder="e.g. P100" value={baseName} onChange={(e) => setBaseName(e.target.value)} />
+        </label>
+        <label className="field">
+          <span className="field-label">Variant</span>
+          <input className="field-input" placeholder="e.g. Grey" value={variant} onChange={(e) => setVariant(e.target.value)} />
+        </label>
+        <button className="btn btn-ghost" type="button" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+      {error && <p className="error-text">{error}</p>}
     </div>
   )
 }

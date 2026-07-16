@@ -3,6 +3,9 @@ export interface Formulation {
   code: string
   name: string | null
   active: boolean
+  category: string | null
+  base_name: string | null
+  variant: string | null
 }
 
 export interface FormulationMaterial {

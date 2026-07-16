@@ -31,7 +31,7 @@ export default function BatchList() {
   useEffect(() => {
     ;(async () => {
       const [{ data: f }, { data: s }] = await Promise.all([
-        supabase.from('formulations').select('id, code, name, active').order('code'),
+        supabase.from('formulations').select('id, code, name, active, category, base_name, variant').order('code'),
         supabase.from('supervisors_public').select('*').order('name'),
       ])
       setFormulations(f ?? [])
