@@ -6,31 +6,6 @@ import Avatar from '../Avatar'
 import IdentityTopBar from '../IdentityTopBar'
 import type { Formulation } from '../types'
 
-interface DisplayGroup {
-  key: string
-  baseName: string | null
-  items: Formulation[]
-}
-
-function buildGroups(list: Formulation[]): DisplayGroup[] {
-  const groups: DisplayGroup[] = []
-  const indexByBase = new Map<string, number>()
-  for (const f of list) {
-    if (f.base_name) {
-      const idx = indexByBase.get(f.base_name)
-      if (idx !== undefined) {
-        groups[idx].items.push(f)
-      } else {
-        indexByBase.set(f.base_name, groups.length)
-        groups.push({ key: f.base_name, baseName: f.base_name, items: [f] })
-      }
-    } else {
-      groups.push({ key: f.id, baseName: null, items: [f] })
-    }
-  }
-  return groups
-}
-
 export default function FormulationSelect() {
   const { supervisor, logout } = useSupervisor()
   const [formulations, setFormulations] = useState<Formulation[]>([])
@@ -70,8 +45,6 @@ export default function FormulationSelect() {
     [formulations, category],
   )
 
-  const groups = useMemo(() => buildGroups(filtered), [filtered])
-
   return (
     <div className="screen">
       <IdentityTopBar
@@ -110,15 +83,15 @@ export default function FormulationSelect() {
       )}
 
       <div className="list">
-        {groups.map((g) =>
-          g.baseName ? (
-            <VariantGroupRow key={g.key} baseName={g.baseName} items={g.items} onPick={(id) => navigate(`/batch/new/${id}`)} />
+        {filtered.map((f) =>
+          f.base_name && f.variant ? (
+            <VariantCard key={f.id} formulation={f} onPick={() => navigate(`/batch/new/${f.id}`)} />
           ) : (
-            <button key={g.key} className="list-item" onClick={() => navigate(`/batch/new/${g.items[0].id}`)}>
-              <Avatar name={g.items[0].code} />
+            <button key={f.id} className="list-item" onClick={() => navigate(`/batch/new/${f.id}`)}>
+              <Avatar name={f.code} />
               <span className="list-item-body">
-                <span className="list-item-code">{g.items[0].code}</span>
-                {g.items[0].name && <span className="list-item-sub">{g.items[0].name}</span>}
+                <span className="list-item-code">{f.code}</span>
+                {f.name && <span className="list-item-sub">{f.name}</span>}
               </span>
             </button>
           ),
@@ -128,32 +101,17 @@ export default function FormulationSelect() {
   )
 }
 
-function VariantGroupRow({
-  baseName,
-  items,
-  onPick,
-}: {
-  baseName: string
-  items: Formulation[]
-  onPick: (id: string) => void
-}) {
+function VariantCard({ formulation, onPick }: { formulation: Formulation; onPick: () => void }) {
+  const variantKey = (formulation.variant ?? '').toLowerCase()
   return (
-    <div className="list-item variant-group-row">
-      <Avatar name={baseName} />
-      <div className="list-item-body">
-        <span className="list-item-code variant-group-name">{baseName}</span>
-        <div className="variant-pills">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              className={`variant-pill variant-pill-${(item.variant ?? '').toLowerCase()}`}
-              onClick={() => onPick(item.id)}
-            >
-              {item.variant ?? item.code}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <button
+      className={`list-item variant-card variant-card-${variantKey}`}
+      onClick={onPick}
+    >
+      <span className="variant-card-body">
+        <span className="variant-card-base">{formulation.base_name}</span>
+        <span className="variant-card-variant">{formulation.variant}</span>
+      </span>
+    </button>
   )
 }

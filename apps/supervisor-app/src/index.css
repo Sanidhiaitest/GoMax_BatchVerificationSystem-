@@ -395,48 +395,50 @@ textarea.field-input {
   color: #06280f;
 }
 
-/* Grouped Grey/White variant rows */
-.variant-group-row {
+/* Grey/White variant cards — each variant is its own card, colored to
+   match, since Grey and White are genuinely different formulations
+   (different material lists), not just a color toggle on one item. */
+.variant-card {
+  flex-direction: column;
   align-items: flex-start;
+  gap: 2px;
 }
 
-.variant-group-name {
+.variant-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.variant-card-base {
   font-size: 21px;
   font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
-.variant-pills {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-  flex-wrap: wrap;
+.variant-card-variant {
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.variant-pill {
-  padding: 7px 16px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  transition: transform 0.1s ease;
+.variant-card-grey {
+  background: #d9d9d6;
+  border-color: #c4c4c0;
 }
 
-.variant-pill:active {
-  transform: scale(0.94);
+.variant-card-grey .variant-card-base,
+.variant-card-grey .variant-card-variant {
+  color: #1c1c1a;
 }
 
-.variant-pill-grey {
-  background: #6b7280;
-  border-color: #6b7280;
-  color: #fff;
+.variant-card-white {
+  background: #fdfbf5;
+  border-color: #e8e3d5;
 }
 
-.variant-pill-white {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+.variant-card-white .variant-card-base,
+.variant-card-white .variant-card-variant {
+  color: #1c1c1a;
 }
 
 /* Forms */
