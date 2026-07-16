@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSupervisor } from '../SupervisorContext'
 
 export default function Login() {
-  const { supervisor, ready, login } = useSupervisor()
+  const { supervisor, ready, initError, retryInit, login } = useSupervisor()
   const [pin, setPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -37,6 +37,17 @@ export default function Login() {
 
   function backspace() {
     setPin((p) => p.slice(0, -1))
+  }
+
+  if (initError) {
+    return (
+      <div className="screen center">
+        <p className="error-text">Could not connect: {initError}</p>
+        <button className="btn btn-primary" onClick={retryInit}>
+          Try again
+        </button>
+      </div>
+    )
   }
 
   if (!ready) {

@@ -7,6 +7,8 @@ const STORAGE_KEY = 'gomax.supervisor'
 interface SupervisorContextValue {
   supervisor: SupervisorSession | null
   ready: boolean
+  initError: string | null
+  retryInit: () => void
   login: (pin: string) => Promise<void>
   logout: () => void
 }
@@ -16,21 +18,38 @@ const SupervisorContext = createContext<SupervisorContextValue | null>(null)
 export function SupervisorProvider({ children }: { children: ReactNode }) {
   const [supervisor, setSupervisor] = useState<SupervisorSession | null>(null)
   const [ready, setReady] = useState(false)
+  const [initError, setInitError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    let cancelled = false
+    setInitError(null)
     ;(async () => {
-      await ensureDeviceSession()
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        try {
-          setSupervisor(JSON.parse(stored))
-        } catch {
-          localStorage.removeItem(STORAGE_KEY)
+      try {
+        await ensureDeviceSession()
+        if (cancelled) return
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (stored) {
+          try {
+            setSupervisor(JSON.parse(stored))
+          } catch {
+            localStorage.removeItem(STORAGE_KEY)
+          }
         }
+        setReady(true)
+      } catch (err) {
+        if (cancelled) return
+        setInitError(err instanceof Error ? err.message : 'Could not connect. Check your internet connection.')
       }
-      setReady(true)
     })()
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [attempt])
+
+  function retryInit() {
+    setAttempt((a) => a + 1)
+  }
 
   async function login(pin: string) {
     await ensureDeviceSession()
@@ -48,7 +67,7 @@ export function SupervisorProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SupervisorContext.Provider value={{ supervisor, ready, login, logout }}>
+    <SupervisorContext.Provider value={{ supervisor, ready, initError, retryInit, login, logout }}>
       {children}
     </SupervisorContext.Provider>
   )

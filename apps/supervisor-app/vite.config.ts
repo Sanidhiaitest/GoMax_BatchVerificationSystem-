@@ -34,6 +34,11 @@ export default defineConfig({
             handler: 'NetworkOnly',
           },
         ],
+        // A new deployment should take over immediately instead of the
+        // previously installed service worker continuing to serve a
+        // stale cached build until every open tab is closed.
+        skipWaiting: true,
+        clientsClaim: true,
       },
       devOptions: {
         enabled: false,
