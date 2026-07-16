@@ -19,8 +19,12 @@ export default function Login() {
     try {
       await login(nextPin)
       navigate('/formulation')
-    } catch {
-      setError('Incorrect PIN. Try again.')
+    } catch (err) {
+      // Only the RPC's deliberate "no match" case gets the friendly
+      // message — anything else (network issue, a database-side bug) is
+      // shown as-is so it's diagnosable instead of masquerading as a typo.
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message.includes('invalid pin') ? 'Incorrect PIN. Try again.' : `Could not log in: ${message}`)
       setPin('')
     } finally {
       setSubmitting(false)

@@ -3,6 +3,12 @@
 -- every timestamp below comes from now(), never from a function argument,
 -- so a client can't backdate/forge one. The minimum-tick-gap check lives
 -- here too, so it can't be bypassed by editing the frontend.
+--
+-- The PIN-hashing functions explicitly include `extensions` in their
+-- search_path: Supabase installs pgcrypto (crypt/gen_salt) into that
+-- schema rather than `public`, so a bare `search_path = public` leaves
+-- crypt()/gen_salt() unresolvable inside a SECURITY DEFINER function even
+-- though the same calls work fine from the SQL Editor's default session.
 
 -- `value #>> '{}'` (get-as-text at the root path) is the idiomatic way to
 -- unwrap a jsonb scalar: it strips quotes from JSON strings and, critically,
@@ -37,7 +43,7 @@ create or replace function admin_create_supervisor(p_name text, p_pin text)
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_id uuid;
@@ -61,7 +67,7 @@ create or replace function admin_set_supervisor_pin(p_supervisor_id uuid, p_pin 
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if not is_admin() then
@@ -98,7 +104,7 @@ create or replace function login_supervisor_pin(p_pin text)
 returns table (supervisor_id uuid, supervisor_name text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   matched supervisors%rowtype;
