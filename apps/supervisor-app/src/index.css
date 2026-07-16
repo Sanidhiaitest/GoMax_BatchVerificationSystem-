@@ -133,6 +133,55 @@ input {
   letter-spacing: -0.01em;
 }
 
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.greeting .title {
+  font-size: 26px;
+}
+
+.stat-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14), rgba(16, 185, 129, 0.05));
+  border: 1px solid var(--accent-strong);
+}
+
+.stat-banner-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.stat-banner-label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.material-row-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.material-time {
+  font-size: 12px;
+}
+
 .link-btn {
   background: none;
   border: none;
@@ -222,10 +271,9 @@ input {
 
 .list-item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 20px 18px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: linear-gradient(155deg, var(--surface-2), var(--surface));
@@ -238,6 +286,23 @@ input {
 .list-item:active {
   transform: scale(0.98);
   border-color: var(--accent);
+}
+
+.list-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.avatar {
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
 }
 
 .list-item-code {
@@ -411,11 +476,20 @@ input {
   gap: 12px;
 }
 
+.material-desc-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
 .material-desc {
   font-size: 16px;
   font-weight: 700;
   flex: 1;
   letter-spacing: -0.005em;
+  margin: 0;
 }
 
 .material-qty {
@@ -479,6 +553,12 @@ input {
 .status-skipped {
   background: var(--danger-bg);
   color: var(--danger);
+}
+
+.status-pending {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
 }
 
 .suspicious-badge {

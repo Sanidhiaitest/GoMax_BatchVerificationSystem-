@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import Avatar from '../Avatar'
 import type { BatchFlag, BatchMaterial } from '../types'
 
 interface BatchDetailData {
@@ -64,6 +65,10 @@ export default function BatchDetail() {
         ) / 10
       : null
 
+  const addedCount = materials.filter((m) => m.status === 'added').length
+  const skippedCount = materials.filter((m) => m.status === 'skipped').length
+  const pendingCount = materials.filter((m) => m.status === 'pending').length
+
   return (
     <div className="page">
       <Link to="/" className="link-btn back-btn">
@@ -71,27 +76,47 @@ export default function BatchDetail() {
       </Link>
 
       <div className="batch-header">
-        <h1 className="page-title">
-          {batch.formulations?.code} · Batch #{batch.batch_number}
-        </h1>
-        <dl className="kv-grid">
-          <dt>Supervisor</dt>
-          <dd>{batch.supervisors?.name}</dd>
-          <dt>Mason</dt>
-          <dd>{batch.mason_name}</dd>
-          <dt>Date</dt>
-          <dd>{batch.batch_date}</dd>
-          <dt>Started</dt>
-          <dd>{new Date(batch.started_at).toLocaleString()}</dd>
-          <dt>Submitted</dt>
-          <dd>{batch.submitted_at ? new Date(batch.submitted_at).toLocaleString() : '— in progress —'}</dd>
-          {duration !== null && (
-            <>
-              <dt>Duration</dt>
-              <dd>{duration} min</dd>
-            </>
-          )}
-        </dl>
+        <div className="batch-header-top">
+          <div className="batch-row-left">
+            <Avatar name={batch.formulations?.code ?? '?'} size={44} />
+            <div>
+              <h1 className="page-title">
+                {batch.formulations?.code} · #{batch.batch_number}
+              </h1>
+              <p className="hint-text">
+                {batch.supervisors?.name} · Mason: {batch.mason_name} · {batch.batch_date}
+              </p>
+            </div>
+          </div>
+          <span className={`status-pill status-${batch.status === 'submitted' ? 'added' : 'pending'}`}>
+            {batch.status === 'submitted' ? '✓ Submitted' : '… In progress'}
+          </span>
+        </div>
+
+        <div className="stat-row batch-stat-row">
+          <div className="stat-card stat-card-accent">
+            <span className="stat-card-value">{duration !== null ? `${duration}m` : '—'}</span>
+            <span className="stat-card-label">Start → submit</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-card-value">{new Date(batch.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="stat-card-label">Started</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-card-value">
+              {batch.submitted_at
+                ? new Date(batch.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '—'}
+            </span>
+            <span className="stat-card-label">Submitted</span>
+          </div>
+          <div className="stat-card" style={pendingCount > 0 ? { borderColor: 'var(--warning)' } : undefined}>
+            <span className="stat-card-value">
+              {addedCount}/{materials.length}
+            </span>
+            <span className="stat-card-label">Materials added</span>
+          </div>
+        </div>
       </div>
 
       {flags.length > 0 && (
@@ -112,23 +137,43 @@ export default function BatchDetail() {
       )}
 
       <section>
-        <h2 className="section-title">Materials</h2>
-        <div className="list">
-          {materials.map((m) => (
-            <div key={m.id} className="material-detail-row">
-              <div className="batch-row-main">
-                <span className="list-item-code">{m.description}</span>
-                <span className="list-item-sub">
-                  Qty: {m.quantity ?? '—'}
-                  {m.ticked_at && ` · ${new Date(m.ticked_at).toLocaleTimeString()}`}
-                </span>
-              </div>
-              <span className={`status-pill status-${m.status}`}>
-                {m.status === 'added' ? '✓ Added' : m.status === 'skipped' ? '✗ Skipped' : 'Pending'}
-                {m.suspicious && <span className="suspicious-badge"> ⚠</span>}
-              </span>
-            </div>
-          ))}
+        <h2 className="section-title">
+          Materials
+          <span className="hint-text">
+            ({addedCount} added · {skippedCount} skipped{pendingCount > 0 ? ` · ${pendingCount} not marked` : ''})
+          </span>
+        </h2>
+        <div className="table-scroll">
+          <table className="materials-table">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Qty</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {materials.map((m) => (
+                <tr key={m.id} className={m.suspicious ? 'row-suspicious' : ''}>
+                  <td className="materials-table-desc">
+                    <Avatar name={m.description} size={26} />
+                    {m.description}
+                  </td>
+                  <td>{m.quantity ?? '—'}</td>
+                  <td>
+                    <span className={`table-symbol table-symbol-${m.status}`}>
+                      {m.status === 'added' ? '✓' : m.status === 'skipped' ? '✗' : '—'}
+                    </span>
+                    {m.suspicious && <span className="suspicious-badge"> ⚠</span>}
+                  </td>
+                  <td className="hint-text">
+                    {m.ticked_at ? new Date(m.ticked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

@@ -5,6 +5,7 @@ import FormulationSelect from './pages/FormulationSelect'
 import BatchSetup from './pages/BatchSetup'
 import BatchChecklist from './pages/BatchChecklist'
 import Submitted from './pages/Submitted'
+import History from './pages/History'
 
 function RequireSupervisor({ children }: { children: React.ReactNode }) {
   const { supervisor, ready } = useSupervisor()
@@ -32,6 +33,14 @@ export default function App() {
             element={
               <RequireSupervisor>
                 <FormulationSelect />
+              </RequireSupervisor>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <RequireSupervisor>
+                <History />
               </RequireSupervisor>
             }
           />

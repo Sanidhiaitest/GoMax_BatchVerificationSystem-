@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
+import Avatar from '../Avatar'
 import type { Formulation } from '../types'
 
 export default function FormulationSelect() {
@@ -10,6 +11,8 @@ export default function FormulationSelect() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  const firstName = supervisor?.name.split(' ')[0] ?? ''
 
   useEffect(() => {
     let cancelled = false
@@ -33,13 +36,23 @@ export default function FormulationSelect() {
     <div className="screen">
       <header className="top-bar">
         <div>
-          <p className="hint-text">Supervisor</p>
+          <p className="hint-text">Signed in</p>
           <p className="top-bar-title">{supervisor?.name}</p>
         </div>
-        <button className="link-btn" onClick={logout}>
-          Switch
-        </button>
+        <div className="top-bar-actions">
+          <button className="link-btn" onClick={() => navigate('/history')}>
+            History
+          </button>
+          <button className="link-btn" onClick={logout}>
+            Switch
+          </button>
+        </div>
       </header>
+
+      <div className="greeting">
+        <h1 className="title">Hello, {firstName}! 👋</h1>
+        <p className="subtitle">Ready to start a batch?</p>
+      </div>
 
       <h2 className="section-title">Select formulation</h2>
 
@@ -56,8 +69,11 @@ export default function FormulationSelect() {
             className="list-item"
             onClick={() => navigate(`/batch/new/${f.id}`)}
           >
-            <span className="list-item-code">{f.code}</span>
-            {f.name && <span className="list-item-sub">{f.name}</span>}
+            <Avatar name={f.code} />
+            <span className="list-item-body">
+              <span className="list-item-code">{f.code}</span>
+              {f.name && <span className="list-item-sub">{f.name}</span>}
+            </span>
           </button>
         ))}
       </div>

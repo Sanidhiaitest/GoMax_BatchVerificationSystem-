@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import Avatar from '../Avatar'
 import type { SupervisorPublic } from '../types'
 
 export default function Supervisors() {
@@ -98,9 +99,12 @@ export default function Supervisors() {
       <div className="list">
         {supervisors.map((s) => (
           <div key={s.id} className="list-item batch-row">
-            <span className="list-item-code">
-              {s.name} {!s.active && <span className="hint-text">(inactive)</span>}
-            </span>
+            <div className="batch-row-left">
+              <Avatar name={s.name} />
+              <span className="list-item-code">
+                {s.name} {!s.active && <span className="hint-text">(inactive)</span>}
+              </span>
+            </div>
             <div className="material-editor-actions">
               <button className="link-btn" onClick={() => resetPin(s)}>
                 Reset PIN

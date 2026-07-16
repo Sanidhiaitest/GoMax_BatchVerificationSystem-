@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import Avatar from '../Avatar'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -195,14 +196,17 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
 
   return (
     <Link to={`/batch/${batch.id}`} className="list-item batch-row">
-      <div className="batch-row-main">
-        <span className="list-item-code">
-          {batch.formulations?.code} · #{batch.batch_number}
-        </span>
-        <span className="list-item-sub">
-          {batch.supervisors?.name} · {batch.batch_date}
-          {batch.status === 'in_progress' && ' · in progress'}
-        </span>
+      <div className="batch-row-left">
+        <Avatar name={batch.formulations?.code ?? '?'} />
+        <div className="batch-row-main">
+          <span className="list-item-code">
+            {batch.formulations?.code} · #{batch.batch_number}
+          </span>
+          <span className="list-item-sub">
+            {batch.supervisors?.name} · {batch.batch_date}
+            {batch.status === 'in_progress' && ' · in progress'}
+          </span>
+        </div>
       </div>
       {worstSeverity && (
         <span className={`severity-badge severity-${worstSeverity}`}>

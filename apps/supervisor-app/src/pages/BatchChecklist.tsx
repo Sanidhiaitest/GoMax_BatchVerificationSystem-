@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import Avatar from '../Avatar'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithFormulation extends Batch {
@@ -50,12 +51,14 @@ export default function BatchChecklist() {
     )
   }
 
-  if (batch.status === 'submitted') {
-    navigate(`/batch/${batch.id}/submitted`, { replace: true })
-    return null
-  }
-
+  const readOnly = batch.status === 'submitted'
   const pendingCount = materials.filter((m) => m.status === 'pending').length
+  const durationMinutes =
+    readOnly && batch.submitted_at
+      ? Math.round(
+          ((new Date(batch.submitted_at).getTime() - new Date(batch.started_at).getTime()) / 60000) * 10,
+        ) / 10
+      : null
 
   async function handleSubmit() {
     if (!batchId) return
@@ -80,24 +83,34 @@ export default function BatchChecklist() {
           </p>
           <p className="top-bar-title">Mason: {batch.mason_name}</p>
         </div>
+        {readOnly && <span className="status-pill status-added">✓ Submitted</span>}
       </header>
+
+      {readOnly && durationMinutes !== null && (
+        <div className="stat-banner">
+          <span className="stat-banner-value">{durationMinutes} min</span>
+          <span className="stat-banner-label">start to submit</span>
+        </div>
+      )}
 
       <div className="list">
         {materials.map((m) => (
-          <MaterialRow key={m.id} material={m} onChanged={load} />
+          <MaterialRow key={m.id} material={m} onChanged={load} readOnly={readOnly} />
         ))}
       </div>
 
       {error && <p className="error-text">{error}</p>}
 
-      <div className="submit-bar">
-        {pendingCount > 0 && (
-          <p className="hint-text">{pendingCount} material(s) not yet marked.</p>
-        )}
-        <button className="btn btn-primary" onClick={() => setShowSubmitConfirm(true)}>
-          Submit Batch
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="submit-bar">
+          {pendingCount > 0 && (
+            <p className="hint-text">{pendingCount} material(s) not yet marked.</p>
+          )}
+          <button className="btn btn-primary" onClick={() => setShowSubmitConfirm(true)}>
+            Submit Batch
+          </button>
+        </div>
+      )}
 
       {showSubmitConfirm && (
         <div className="modal-backdrop">
@@ -128,12 +141,20 @@ export default function BatchChecklist() {
   )
 }
 
-function MaterialRow({ material, onChanged }: { material: BatchMaterial; onChanged: () => void }) {
+function MaterialRow({
+  material,
+  onChanged,
+  readOnly,
+}: {
+  material: BatchMaterial
+  onChanged: () => void
+  readOnly: boolean
+}) {
   const [quantity, setQuantity] = useState(material.quantity?.toString() ?? '')
   const [busy, setBusy] = useState(false)
   const [rowError, setRowError] = useState<string | null>(null)
 
-  const locked = material.status !== 'pending'
+  const locked = readOnly || material.status !== 'pending'
 
   async function mark(status: 'added' | 'skipped') {
     setRowError(null)
@@ -158,7 +179,10 @@ function MaterialRow({ material, onChanged }: { material: BatchMaterial; onChang
   return (
     <div className={`material-row ${locked ? 'material-row-locked' : ''}`}>
       <div className="material-row-main">
-        <p className="material-desc">{material.description}</p>
+        <span className="material-desc-group">
+          <Avatar name={material.description} size={32} />
+          <p className="material-desc">{material.description}</p>
+        </span>
         <input
           className="field-input material-qty"
           inputMode="decimal"
@@ -170,10 +194,15 @@ function MaterialRow({ material, onChanged }: { material: BatchMaterial; onChang
       </div>
       <div className="material-row-actions">
         {locked ? (
-          <span className={`status-pill status-${material.status}`}>
-            {material.status === 'added' ? '✓ Added' : '✗ Skipped'}
-            {material.suspicious && <span className="suspicious-badge"> ⚠ fast</span>}
-          </span>
+          <div className="material-row-status">
+            <span className={`status-pill status-${material.status}`}>
+              {material.status === 'added' ? '✓ Added' : material.status === 'skipped' ? '✗ Skipped' : '— Not marked'}
+              {material.suspicious && <span className="suspicious-badge"> ⚠ fast</span>}
+            </span>
+            {material.ticked_at && (
+              <span className="hint-text material-time">{new Date(material.ticked_at).toLocaleTimeString()}</span>
+            )}
+          </div>
         ) : (
           <>
             <button className="icon-btn icon-btn-cross" onClick={() => mark('skipped')} disabled={busy}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import Avatar from '../Avatar'
 import type { Formulation, FormulationMaterial } from '../types'
 
 export default function Formulations() {
@@ -53,11 +54,7 @@ export default function Formulations() {
   return (
     <div className="page">
       <h1 className="page-title">Formulations</h1>
-      <p className="hint-text">
-        Editing a formulation's materials here updates the supervisor checklist everywhere,
-        immediately — in-progress and submitted batches keep the material list they were started
-        with.
-      </p>
+      <p className="hint-text">Edits here update supervisor checklists instantly.</p>
 
       <form className="inline-form" onSubmit={createFormulation}>
         <input
@@ -84,13 +81,16 @@ export default function Formulations() {
         {formulations.map((f) => (
           <div key={f.id} className="list-item formulation-card">
             <button
-              className="batch-row-main formulation-header"
+              className="formulation-header"
               onClick={() => setExpanded(expanded === f.id ? null : f.id)}
             >
-              <span className="list-item-code">
-                {f.code} {!f.active && <span className="hint-text">(inactive)</span>}
-              </span>
-              {f.name && <span className="list-item-sub">{f.name}</span>}
+              <Avatar name={f.code} />
+              <div className="batch-row-main">
+                <span className="list-item-code">
+                  {f.code} {!f.active && <span className="hint-text">(inactive)</span>}
+                </span>
+                {f.name && <span className="list-item-sub">{f.name}</span>}
+              </div>
             </button>
             <button className="link-btn" onClick={() => toggleActive(f)}>
               {f.active ? 'Deactivate' : 'Activate'}
@@ -166,7 +166,10 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
       {error && <p className="error-text">{error}</p>}
       {materials.map((m, i) => (
         <div key={m.id} className="material-editor-row">
-          <span>{m.description}</span>
+          <div className="material-editor-row-left">
+            <Avatar name={m.description} size={26} />
+            <span>{m.description}</span>
+          </div>
           <div className="material-editor-actions">
             <button className="icon-btn-sm" onClick={() => move(i, -1)} disabled={i === 0}>
               ↑
