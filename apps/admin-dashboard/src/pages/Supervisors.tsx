@@ -33,7 +33,11 @@ export default function Supervisors() {
     const { error } = await supabase.rpc('admin_create_supervisor', { p_name: name.trim(), p_pin: pin })
     setCreating(false)
     if (error) {
-      setError(error.message)
+      setError(
+        error.message.includes('duplicate_supervisor_name')
+          ? `An active supervisor named "${name.trim()}" already exists.`
+          : error.message,
+      )
       return
     }
     setName('')

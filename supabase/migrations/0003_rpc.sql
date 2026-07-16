@@ -55,9 +55,13 @@ begin
     raise exception 'pin must be exactly 4 digits';
   end if;
 
-  insert into supervisors (name, pin_hash)
-  values (p_name, crypt(p_pin, gen_salt('bf')))
-  returning id into new_id;
+  begin
+    insert into supervisors (name, pin_hash)
+    values (p_name, crypt(p_pin, gen_salt('bf')))
+    returning id into new_id;
+  exception when unique_violation then
+    raise exception 'duplicate_supervisor_name: an active supervisor named % already exists', p_name;
+  end;
 
   return new_id;
 end;
