@@ -10,15 +10,15 @@ export default function Login() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (ready && supervisor) navigate('/formulation', { replace: true })
+    if (ready && supervisor) navigate(supervisor.role === 'tester' ? '/testing' : '/formulation', { replace: true })
   }, [ready, supervisor, navigate])
 
   async function submitPin(nextPin: string) {
     setSubmitting(true)
     setError(null)
     try {
-      await login(nextPin)
-      navigate('/formulation')
+      const session = await login(nextPin)
+      navigate(session.role === 'tester' ? '/testing' : '/formulation')
     } catch (err) {
       // Only the RPC's deliberate "no match" case gets the friendly
       // message — anything else (network issue, a database-side bug) is

@@ -541,6 +541,18 @@ a {
   color: var(--info);
 }
 
+.severity-success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.batch-row-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
 /* Batch detail */
 .batch-header {
   border-radius: var(--radius);

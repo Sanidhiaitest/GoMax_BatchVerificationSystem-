@@ -9,7 +9,7 @@ interface SupervisorContextValue {
   ready: boolean
   initError: string | null
   retryInit: () => void
-  login: (pin: string) => Promise<void>
+  login: (pin: string) => Promise<SupervisorSession>
   logout: () => void
 }
 
@@ -31,7 +31,9 @@ export function SupervisorProvider({ children }: { children: ReactNode }) {
         const stored = localStorage.getItem(STORAGE_KEY)
         if (stored) {
           try {
-            setSupervisor(JSON.parse(stored))
+            const parsed = JSON.parse(stored)
+            // Sessions saved before the tester role existed won't have it.
+            setSupervisor({ role: 'supervisor', ...parsed })
           } catch {
             localStorage.removeItem(STORAGE_KEY)
           }
@@ -56,9 +58,10 @@ export function SupervisorProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc('login_supervisor_pin', { p_pin: pin })
     if (error) throw error
     const row = Array.isArray(data) ? data[0] : data
-    const session: SupervisorSession = { id: row.supervisor_id, name: row.supervisor_name }
+    const session: SupervisorSession = { id: row.supervisor_id, name: row.supervisor_name, role: row.supervisor_role }
     setSupervisor(session)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+    return session
   }
 
   function logout() {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
-import type { BatchFlag, BatchMaterial } from '../types'
+import type { BatchFlag, BatchMaterial, TestingStatus } from '../types'
 
 interface BatchDetailData {
   id: string
@@ -12,8 +12,15 @@ interface BatchDetailData {
   status: 'in_progress' | 'submitted'
   started_at: string
   submitted_at: string | null
+  testing_status: TestingStatus
+  sent_for_testing_at: string | null
+  testing_started_at: string | null
+  testing_completed_at: string | null
+  test_remarks: string | null
+  test_remarks_audio_path: string | null
   formulations: { code: string; name: string | null } | null
   supervisors: { name: string } | null
+  tester: { name: string } | null
 }
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -33,7 +40,9 @@ export default function BatchDetail() {
       const [{ data: b, error: bErr }, { data: m }, { data: fl }] = await Promise.all([
         supabase
           .from('batches')
-          .select('*, formulations(code, name), supervisors(name)')
+          .select(
+            '*, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name)',
+          )
           .eq('id', batchId)
           .single(),
         supabase.from('batch_materials').select('*').eq('batch_id', batchId).order('sort_order'),
@@ -45,7 +54,7 @@ export default function BatchDetail() {
       ])
       if (cancelled) return
       if (bErr) setError(bErr.message)
-      else setBatch(b as BatchDetailData)
+      else setBatch(b as unknown as BatchDetailData)
       setMaterials(m ?? [])
       setFlags(((fl ?? []) as BatchFlag[]).sort((a, b2) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b2.severity]))
       setLoading(false)
@@ -119,6 +128,8 @@ export default function BatchDetail() {
         </div>
       </div>
 
+      {batch.testing_status !== 'not_sent' && <LabTestingSection batch={batch} />}
+
       {flags.length > 0 && (
         <section>
           <h2 className="section-title">Flags</h2>
@@ -177,5 +188,103 @@ export default function BatchDetail() {
         </div>
       </section>
     </div>
+  )
+}
+
+function LabTestingSection({ batch }: { batch: BatchDetailData }) {
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!batch.test_remarks_audio_path) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.storage
+        .from('testing-audio')
+        .createSignedUrl(batch.test_remarks_audio_path!, 3600)
+      if (!cancelled && data) setAudioUrl(data.signedUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [batch.test_remarks_audio_path])
+
+  const testingDuration =
+    batch.testing_started_at && batch.testing_completed_at
+      ? Math.round(
+          ((new Date(batch.testing_completed_at).getTime() - new Date(batch.testing_started_at).getTime()) / 60000) *
+            10,
+        ) / 10
+      : null
+
+  const resultLabel: Record<TestingStatus, string> = {
+    not_sent: '',
+    pending: '🧪 Awaiting testing',
+    in_progress: '🧪 Testing in progress',
+    passed: '✓ Passed',
+    failed: '✗ Failed',
+  }
+
+  return (
+    <section>
+      <h2 className="section-title">Lab Testing</h2>
+      <div className="batch-header">
+        <div className="batch-header-top">
+          <span
+            className={`status-pill status-${
+              batch.testing_status === 'passed' ? 'added' : batch.testing_status === 'failed' ? 'skipped' : 'pending'
+            }`}
+            style={{ fontSize: 15, padding: '8px 16px' }}
+          >
+            {resultLabel[batch.testing_status]}
+          </span>
+          {batch.tester && <span className="hint-text">Tester: {batch.tester.name}</span>}
+        </div>
+
+        <div className="stat-row">
+          <div className="stat-card">
+            <span className="stat-card-value">
+              {batch.sent_for_testing_at
+                ? new Date(batch.sent_for_testing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '—'}
+            </span>
+            <span className="stat-card-label">Sent</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-card-value">
+              {batch.testing_started_at
+                ? new Date(batch.testing_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '—'}
+            </span>
+            <span className="stat-card-label">Started</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-card-value">
+              {batch.testing_completed_at
+                ? new Date(batch.testing_completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '—'}
+            </span>
+            <span className="stat-card-label">Completed</span>
+          </div>
+          <div className="stat-card stat-card-accent">
+            <span className="stat-card-value">{testingDuration !== null ? `${testingDuration}m` : '—'}</span>
+            <span className="stat-card-label">Duration</span>
+          </div>
+        </div>
+
+        {batch.test_remarks && (
+          <div>
+            <p className="field-label">Remarks</p>
+            <p className="flag-message">"{batch.test_remarks}"</p>
+          </div>
+        )}
+
+        {audioUrl && (
+          <div>
+            <p className="field-label">Voice note</p>
+            <audio controls src={audioUrl} style={{ width: '100%' }} />
+          </div>
+        )}
+      </div>
+    </section>
   )
 }

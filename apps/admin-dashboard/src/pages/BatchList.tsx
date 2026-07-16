@@ -6,6 +6,13 @@ import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
 
+const TESTING_LABEL: Record<string, string> = {
+  pending: '🧪 Awaiting test',
+  in_progress: '🧪 Testing',
+  passed: '✓ Passed',
+  failed: '✗ Failed',
+}
+
 export default function BatchList() {
   const [batches, setBatches] = useState<BatchListRow[]>([])
   const [formulations, setFormulations] = useState<Formulation[]>([])
@@ -16,6 +23,10 @@ export default function BatchList() {
   const [dateFilter, setDateFilter] = useState('')
   const [supervisorFilter, setSupervisorFilter] = useState('')
   const [formulationFilter, setFormulationFilter] = useState('')
+  const [testerFilter, setTesterFilter] = useState('')
+
+  const mixers = useMemo(() => supervisors.filter((s) => s.role === 'supervisor'), [supervisors])
+  const testers = useMemo(() => supervisors.filter((s) => s.role === 'tester'), [supervisors])
 
   useEffect(() => {
     ;(async () => {
@@ -35,7 +46,7 @@ export default function BatchList() {
       let query = supabase
         .from('batches')
         .select(
-          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, formulations(code, name), supervisors(name), batch_flags(id, severity)',
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), batch_flags(id, severity)',
         )
         .order('started_at', { ascending: false })
         .limit(200)
@@ -43,6 +54,7 @@ export default function BatchList() {
       if (dateFilter) query = query.eq('batch_date', dateFilter)
       if (supervisorFilter) query = query.eq('supervisor_id', supervisorFilter)
       if (formulationFilter) query = query.eq('formulation_id', formulationFilter)
+      if (testerFilter) query = query.eq('tester_id', testerFilter)
 
       const { data, error } = await query
       if (cancelled) return
@@ -53,7 +65,7 @@ export default function BatchList() {
     return () => {
       cancelled = true
     }
-  }, [dateFilter, supervisorFilter, formulationFilter])
+  }, [dateFilter, supervisorFilter, formulationFilter, testerFilter])
 
   const flagged = useMemo(
     () =>
@@ -72,6 +84,7 @@ export default function BatchList() {
     () => batches.filter((b) => b.batch_flags.some((f) => f.severity === 'critical')).length,
     [batches],
   )
+  const failedTestCount = useMemo(() => batches.filter((b) => b.testing_status === 'failed').length, [batches])
 
   return (
     <div className="page">
@@ -97,6 +110,14 @@ export default function BatchList() {
             </span>
             <span className="stat-card-label">Critical</span>
           </div>
+          {failedTestCount > 0 && (
+            <div className="stat-card">
+              <span className="stat-card-value" style={{ color: 'var(--danger)' }}>
+                {failedTestCount}
+              </span>
+              <span className="stat-card-label">Failed testing</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -118,7 +139,7 @@ export default function BatchList() {
             onChange={(e) => setSupervisorFilter(e.target.value)}
           >
             <option value="">All</option>
-            {supervisors.map((s) => (
+            {mixers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
@@ -140,13 +161,27 @@ export default function BatchList() {
             ))}
           </select>
         </label>
-        {(dateFilter || supervisorFilter || formulationFilter) && (
+        {testers.length > 0 && (
+          <label className="field">
+            <span className="field-label">Tester</span>
+            <select className="field-input" value={testerFilter} onChange={(e) => setTesterFilter(e.target.value)}>
+              <option value="">All</option>
+              {testers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {(dateFilter || supervisorFilter || formulationFilter || testerFilter) && (
           <button
             className="link-btn"
             onClick={() => {
               setDateFilter('')
               setSupervisorFilter('')
               setFormulationFilter('')
+              setTesterFilter('')
             }}
           >
             Clear filters
@@ -208,11 +243,18 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
           </span>
         </div>
       </div>
-      {worstSeverity && (
-        <span className={`severity-badge severity-${worstSeverity}`}>
-          {batch.batch_flags.length} flag{batch.batch_flags.length > 1 ? 's' : ''}
-        </span>
-      )}
+      <div className="batch-row-badges">
+        {batch.testing_status !== 'not_sent' && (
+          <span className={`severity-badge severity-${batch.testing_status === 'failed' ? 'critical' : batch.testing_status === 'passed' ? 'success' : 'warning'}`}>
+            {TESTING_LABEL[batch.testing_status]}
+          </span>
+        )}
+        {worstSeverity && (
+          <span className={`severity-badge severity-${worstSeverity}`}>
+            {batch.batch_flags.length} flag{batch.batch_flags.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
     </Link>
   )
 }

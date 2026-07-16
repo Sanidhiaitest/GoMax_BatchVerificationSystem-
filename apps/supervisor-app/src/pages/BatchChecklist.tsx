@@ -16,6 +16,7 @@ export default function BatchChecklist() {
   const [error, setError] = useState<string | null>(null)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [sendingForTesting, setSendingForTesting] = useState(false)
   const navigate = useNavigate()
 
   const load = useCallback(async () => {
@@ -74,6 +75,16 @@ export default function BatchChecklist() {
     navigate(`/batch/${batchId}/submitted`)
   }
 
+  async function handleSendForTesting() {
+    if (!batchId) return
+    setSendingForTesting(true)
+    setError(null)
+    const { error } = await supabase.rpc('send_batch_for_testing', { p_batch_id: batchId })
+    setSendingForTesting(false)
+    if (error) setError(error.message)
+    else load()
+  }
+
   return (
     <div className="screen">
       <header className="top-bar">
@@ -100,6 +111,8 @@ export default function BatchChecklist() {
       </div>
 
       {error && <p className="error-text">{error}</p>}
+
+      {readOnly && <TestingStatusSection batch={batch} onSend={handleSendForTesting} sending={sendingForTesting} />}
 
       {!readOnly && (
         <div className="submit-bar">
@@ -137,6 +150,47 @@ export default function BatchChecklist() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function TestingStatusSection({
+  batch,
+  onSend,
+  sending,
+}: {
+  batch: BatchWithFormulation
+  onSend: () => void
+  sending: boolean
+}) {
+  if (batch.testing_status === 'not_sent') {
+    return (
+      <button className="btn btn-ghost" onClick={onSend} disabled={sending}>
+        {sending ? 'Sending…' : '🧪 Send for Testing'}
+      </button>
+    )
+  }
+
+  if (batch.testing_status === 'pending' || batch.testing_status === 'in_progress') {
+    return (
+      <div className="stat-banner">
+        <span className="stat-banner-value">
+          {batch.testing_status === 'pending' ? 'Sent for testing' : 'Testing in progress'}
+        </span>
+        <span className="stat-banner-label">waiting on the lab</span>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className={`stat-banner ${batch.testing_status === 'failed' ? 'stat-banner-danger' : ''}`}>
+        <span className="stat-banner-value">{batch.testing_status === 'passed' ? '✓ Test passed' : '✗ Test failed'}</span>
+        <span className="stat-banner-label">
+          {batch.testing_completed_at && new Date(batch.testing_completed_at).toLocaleString()}
+        </span>
+      </div>
+      {batch.test_remarks && <p className="hint-text">"{batch.test_remarks}"</p>}
     </div>
   )
 }

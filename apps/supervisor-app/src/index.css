@@ -171,6 +171,39 @@ input {
   color: var(--text-dim);
 }
 
+.stat-banner-danger {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.16), rgba(248, 113, 113, 0.05));
+  border-color: var(--danger);
+}
+
+.stat-banner-danger .stat-banner-value {
+  color: var(--danger);
+}
+
+.testing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+textarea.field-input {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.audio-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.audio-preview audio {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+}
+
 .material-row-status {
   display: flex;
   flex-direction: column;
@@ -293,6 +326,7 @@ input {
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  flex: 1;
 }
 
 .avatar {

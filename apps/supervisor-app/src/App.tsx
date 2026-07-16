@@ -6,6 +6,9 @@ import BatchSetup from './pages/BatchSetup'
 import BatchChecklist from './pages/BatchChecklist'
 import Submitted from './pages/Submitted'
 import History from './pages/History'
+import TesterQueue from './pages/TesterQueue'
+import TesterBatchDetail from './pages/TesterBatchDetail'
+import TesterHistory from './pages/TesterHistory'
 
 function RequireSupervisor({ children }: { children: React.ReactNode }) {
   const { supervisor, ready } = useSupervisor()
@@ -65,6 +68,30 @@ export default function App() {
             element={
               <RequireSupervisor>
                 <Submitted />
+              </RequireSupervisor>
+            }
+          />
+          <Route
+            path="/testing"
+            element={
+              <RequireSupervisor>
+                <TesterQueue />
+              </RequireSupervisor>
+            }
+          />
+          <Route
+            path="/testing/history"
+            element={
+              <RequireSupervisor>
+                <TesterHistory />
+              </RequireSupervisor>
+            }
+          />
+          <Route
+            path="/testing/:batchId"
+            element={
+              <RequireSupervisor>
+                <TesterBatchDetail />
               </RequireSupervisor>
             }
           />

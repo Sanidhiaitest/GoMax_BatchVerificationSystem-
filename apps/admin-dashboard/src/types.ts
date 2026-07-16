@@ -13,10 +13,13 @@ export interface FormulationMaterial {
   active: boolean
 }
 
+export type SupervisorRole = 'supervisor' | 'tester'
+
 export interface SupervisorPublic {
   id: string
   name: string
   active: boolean
+  role: SupervisorRole
 }
 
 export type BatchMaterialStatus = 'pending' | 'added' | 'skipped'
@@ -44,6 +47,8 @@ export interface BatchFlag {
   created_at: string
 }
 
+export type TestingStatus = 'not_sent' | 'pending' | 'in_progress' | 'passed' | 'failed'
+
 export interface BatchListRow {
   id: string
   batch_number: string
@@ -52,6 +57,7 @@ export interface BatchListRow {
   status: 'in_progress' | 'submitted'
   started_at: string
   submitted_at: string | null
+  testing_status: TestingStatus
   formulations: { code: string; name: string | null } | null
   supervisors: { name: string } | null
   batch_flags: { id: string; severity: FlagSeverity }[]

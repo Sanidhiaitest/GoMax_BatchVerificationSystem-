@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
   const { data: batch, error: batchError } = await supabase
     .from("batches")
     .select(
-      "id, batch_number, batch_date, mason_name, status, started_at, submitted_at, formulation_id, supervisor_id, formulations(code, name), supervisors(name)",
+      "id, batch_number, batch_date, mason_name, status, started_at, submitted_at, formulation_id, supervisor_id, formulations(code, name), supervisors!batches_supervisor_id_fkey(name)",
     )
     .eq("id", batchId)
     .single();
