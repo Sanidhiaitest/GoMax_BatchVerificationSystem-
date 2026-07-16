@@ -68,11 +68,10 @@ export default function TesterBatchDetail() {
 
   return (
     <div className="screen">
-      <button className="link-btn back-btn" onClick={() => navigate('/testing')}>
-        ← Back to queue
-      </button>
-
-      <div className="top-bar">
+      <div className="top-bar top-bar-stacked">
+        <button className="link-btn back-btn" onClick={() => navigate('/testing')}>
+          ← Back to queue
+        </button>
         <div className="batch-row-left">
           <Avatar name={batch.formulations?.code ?? '?'} />
           <div>
