@@ -204,24 +204,31 @@ function TestingStatusSection({
 
   if (batch.testing_status === 'pending' || batch.testing_status === 'in_progress') {
     return (
-      <div className="stat-banner">
-        <span className="stat-banner-value">
-          {batch.testing_status === 'pending' ? 'Sent for testing' : 'Testing in progress'}
-        </span>
-        <span className="stat-banner-label">waiting on the lab</span>
+      <div className="result-banner result-info">
+        <span className="result-banner-icon">🧪</span>
+        <div>
+          <span className="result-banner-title">
+            {batch.testing_status === 'pending' ? 'Sent for testing' : 'Testing in progress'}
+          </span>
+          <span className="result-banner-sub">Waiting on the lab</span>
+        </div>
       </div>
     )
   }
 
+  const passed = batch.testing_status === 'passed'
   return (
-    <div>
-      <div className={`stat-banner ${batch.testing_status === 'failed' ? 'stat-banner-danger' : ''}`}>
-        <span className="stat-banner-value">{batch.testing_status === 'passed' ? '✓ Test passed' : '✗ Test failed'}</span>
-        <span className="stat-banner-label">
-          {batch.testing_completed_at && new Date(batch.testing_completed_at).toLocaleString()}
-        </span>
+    <div className="result-block">
+      <div className={`result-banner ${passed ? 'result-pass' : 'result-fail'}`}>
+        <span className="result-banner-icon">{passed ? '✓' : '✗'}</span>
+        <div>
+          <span className="result-banner-title">{passed ? 'Test Passed' : 'Test Failed'}</span>
+          <span className="result-banner-sub">
+            {batch.testing_completed_at ? new Date(batch.testing_completed_at).toLocaleString() : ''}
+          </span>
+        </div>
       </div>
-      {batch.test_remarks && <p className="hint-text">"{batch.test_remarks}"</p>}
+      {batch.test_remarks && <p className="result-remarks">"{batch.test_remarks}"</p>}
     </div>
   )
 }

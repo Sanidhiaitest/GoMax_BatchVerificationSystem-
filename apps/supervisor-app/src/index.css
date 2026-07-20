@@ -2120,6 +2120,21 @@ textarea.field-input {
   border: 1.5px solid rgba(220, 38, 38, 0.3);
 }
 
+.result-info {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+}
+
+.result-info .result-banner-icon {
+  background: rgba(15, 30, 61, 0.08);
+}
+
+.result-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .result-banner-icon {
   width: 40px;
   height: 40px;
