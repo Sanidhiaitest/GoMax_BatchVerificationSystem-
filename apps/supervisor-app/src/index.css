@@ -774,7 +774,19 @@ textarea.field-input {
 .gomax-wordmark {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.gomax-badge {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #c1440e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 3px 12px rgba(193, 68, 14, 0.27);
 }
 
 .gomax-wordmark-text {
@@ -785,46 +797,77 @@ textarea.field-input {
 
 .gomax-wordmark-title {
   font-weight: 800;
+  font-size: 16px;
+  line-height: 16px;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  color: var(--text);
 }
 
 .gomax-wordmark-subtitle {
-  font-size: 13px;
+  font-size: 11px;
+  line-height: 16px;
   color: var(--text-dim);
-  font-weight: 600;
+  font-weight: 400;
 }
 
-/* "Kaun ho tum?" person picker */
+/* "Kaun ho tum?" person picker — heading */
+.picker-title {
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.5px;
+}
+
+.picker-subtitle {
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* "Photo booth" person picker: each card sits at a slight alternating
+   tilt on a pastel card, like polaroids fanned out on a table, with a
+   flat white nameplate strip pinned to the bottom of each. */
 .person-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, 109px);
+  justify-content: center;
+  gap: 22px 16px;
+  padding: 6px 0 10px;
 }
 
 .person-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 8px 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.1s ease, box-shadow 0.15s ease;
+  width: 109px;
+  min-height: 131.3px;
+  padding: 0;
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.13), 0px 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .person-card:active {
-  transform: scale(0.96);
+  box-shadow: 0px 3px 12px rgba(0, 0, 0, 0.13), 0px 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.person-card-photo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 10px;
 }
 
 .person-card-nameplate {
-  font-size: 13px;
+  background: #ffffff;
+  border-top: 1px solid rgba(10, 22, 40, 0.05);
+  border-radius: 0 0 17px 17px;
+  padding: 9px 6px 11px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text);
+  line-height: 14px;
+  color: #0a1628;
   text-align: center;
-  line-height: 1.2;
 }
 
 /* PIN entry: dark identity header + white bottom sheet, replacing the old

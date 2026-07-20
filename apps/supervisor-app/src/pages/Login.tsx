@@ -6,6 +6,12 @@ import { GoMaxWordmark } from '../GoMaxLogo'
 import Avatar from '../Avatar'
 import type { SupervisorRoster } from '../types'
 
+// Photo-booth picker: each card gets a slight alternating tilt and a
+// cycling pastel backdrop so the roster reads like fanned-out polaroids
+// instead of a flat table.
+const CARD_ROTATIONS = [-5, 3, -2, 5, -3, 2]
+const CARD_COLORS = ['#EEF2F8', '#F5F0EA', '#EEF5EE', '#F5EEF5', '#EEF2F8', '#F5F5EA']
+
 export default function Login() {
   const { supervisor, ready, initError, retryInit, login } = useSupervisor()
   const [roster, setRoster] = useState<SupervisorRoster[]>([])
@@ -148,16 +154,26 @@ export default function Login() {
       <GoMaxWordmark subtitle="Batch QC" />
 
       <div className="greeting">
-        <h1 className="title">Kaun ho tum? 👷</h1>
-        <p className="subtitle">Tap your name to sign in</p>
+        <h1 className="title picker-title">Kaun ho tum? 👷</h1>
+        <p className="subtitle picker-subtitle">Tap your name to sign in</p>
       </div>
 
       {rosterError && <p className="error-text">{rosterError}</p>}
 
       <div className="person-grid">
-        {roster.map((s) => (
-          <button key={s.id} className="person-card" onClick={() => setSelected(s)}>
-            <Avatar name={s.name} size={56} />
+        {roster.map((s, i) => (
+          <button
+            key={s.id}
+            className="person-card"
+            style={{
+              transform: `rotate(${CARD_ROTATIONS[i % CARD_ROTATIONS.length]}deg)`,
+              background: CARD_COLORS[i % CARD_COLORS.length],
+            }}
+            onClick={() => setSelected(s)}
+          >
+            <span className="person-card-photo">
+              <Avatar name={s.name} size={56} />
+            </span>
             <span className="person-card-nameplate">{s.name}</span>
           </button>
         ))}
