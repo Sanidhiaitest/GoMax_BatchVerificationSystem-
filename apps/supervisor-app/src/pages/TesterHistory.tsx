@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import Avatar from '../Avatar'
 
 interface HistoryRow {
   id: string
   batch_number: string
   batch_date: string
   testing_status: string
-  formulations: { code: string } | null
+  testing_completed_at: string | null
+  formulations: { code: string; name: string | null; base_name: string | null } | null
   supervisors: { name: string } | null
 }
 
@@ -23,7 +23,9 @@ export default function TesterHistory() {
     ;(async () => {
       const { data, error } = await supabase
         .from('batches')
-        .select('id, batch_number, batch_date, testing_status, formulations(code), supervisors!batches_supervisor_id_fkey(name)')
+        .select(
+          'id, batch_number, batch_date, testing_status, testing_completed_at, formulations(code, name, base_name), supervisors!batches_supervisor_id_fkey(name)',
+        )
         .in('testing_status', ['passed', 'failed'])
         .order('testing_completed_at', { ascending: false })
         .limit(100)
@@ -43,29 +45,39 @@ export default function TesterHistory() {
         ← Back
       </button>
 
-      <h2 className="section-title">Tests you've completed</h2>
+      <div className="greeting">
+        <h1 className="title picker-title">Tests completed</h1>
+        <p className="subtitle picker-subtitle">Everything you've passed or failed</p>
+      </div>
 
       {loading && <p className="hint-text">Loading…</p>}
       {error && <p className="error-text">{error}</p>}
       {!loading && rows.length === 0 && !error && <p className="hint-text">No completed tests yet.</p>}
 
       <div className="list">
-        {rows.map((r) => (
-          <button key={r.id} className="list-item" onClick={() => navigate(`/testing/${r.id}`)}>
-            <Avatar name={r.formulations?.code ?? '?'} />
-            <span className="list-item-body">
-              <span className="list-item-code">
-                {r.formulations?.code} · #{r.batch_number}
+        {rows.map((r) => {
+          const product = r.formulations?.base_name ?? r.formulations?.name ?? r.formulations?.code
+          const passed = r.testing_status === 'passed'
+          return (
+            <button key={r.id} className="queue-card" onClick={() => navigate(`/testing/${r.id}`)}>
+              <span className="queue-card-main">
+                <span className="queue-card-top">
+                  <span className="queue-card-number">#{r.batch_number}</span>
+                  <span className="queue-card-time">
+                    {r.testing_completed_at ? new Date(r.testing_completed_at).toLocaleDateString() : r.batch_date}
+                  </span>
+                </span>
+                <span className="queue-card-name">{product}</span>
+                <span className="queue-card-sub">
+                  {r.formulations?.code} · {r.supervisors?.name}
+                </span>
               </span>
-              <span className="list-item-sub">
-                {r.supervisors?.name} · {r.batch_date}
+              <span className={`result-pill ${passed ? 'result-pill-pass' : 'result-pill-fail'}`}>
+                {passed ? '✓ Passed' : '✗ Failed'}
               </span>
-            </span>
-            <span className={`status-pill status-${r.testing_status === 'passed' ? 'added' : 'skipped'}`}>
-              {r.testing_status === 'passed' ? '✓ Passed' : '✗ Failed'}
-            </span>
-          </button>
-        ))}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

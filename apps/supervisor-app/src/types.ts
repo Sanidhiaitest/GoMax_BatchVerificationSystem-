@@ -42,6 +42,7 @@ export interface Batch {
   testing_completed_at: string | null
   test_remarks: string | null
   test_remarks_audio_path: string | null
+  test_photo_path: string | null
 }
 
 export type SupervisorRole = 'supervisor' | 'tester'

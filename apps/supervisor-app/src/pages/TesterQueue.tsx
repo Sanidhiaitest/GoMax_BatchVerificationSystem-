@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
-import Avatar from '../Avatar'
-import IdentityTopBar from '../IdentityTopBar'
+import AppHeader from '../AppHeader'
 
 interface QueueRow {
   id: string
@@ -11,8 +10,19 @@ interface QueueRow {
   batch_date: string
   testing_status: string
   sent_for_testing_at: string | null
-  formulations: { code: string } | null
+  formulations: { code: string; name: string | null; base_name: string | null } | null
   supervisors: { name: string } | null
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return ''
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.round(hours / 24)
+  return days === 1 ? 'Yesterday' : `${days}d ago`
 }
 
 export default function TesterQueue() {
@@ -29,7 +39,9 @@ export default function TesterQueue() {
     ;(async () => {
       const { data, error } = await supabase
         .from('batches')
-        .select('id, batch_number, batch_date, testing_status, sent_for_testing_at, formulations(code), supervisors!batches_supervisor_id_fkey(name)')
+        .select(
+          'id, batch_number, batch_date, testing_status, sent_for_testing_at, formulations(code, name, base_name), supervisors!batches_supervisor_id_fkey(name)',
+        )
         .in('testing_status', ['pending', 'in_progress'])
         .order('sent_for_testing_at', { ascending: true })
       if (cancelled) return
@@ -44,7 +56,7 @@ export default function TesterQueue() {
 
   return (
     <div className="screen">
-      <IdentityTopBar
+      <AppHeader
         name={supervisor?.name ?? ''}
         historyLabel="History"
         onHistory={() => navigate('/testing/history')}
@@ -52,33 +64,44 @@ export default function TesterQueue() {
       />
 
       <div className="greeting">
-        <h1 className="title">
-          <span className="title-highlight">Hello,</span> {firstName}! 🧪
+        <h1 className="title picker-title">
+          Hi {firstName}, ready to test? 🧪
         </h1>
-        <p className="subtitle">Batches waiting for testing</p>
+        <p className="subtitle picker-subtitle">Batches waiting for QC</p>
       </div>
 
       {loading && <p className="hint-text">Loading…</p>}
       {error && <p className="error-text">{error}</p>}
       {!loading && rows.length === 0 && !error && (
-        <p className="hint-text">Nothing waiting right now — new batches will show up here.</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">✓</div>
+          <p className="empty-state-title">All clear!</p>
+          <p className="hint-text">Nothing waiting right now — new batches will show up here.</p>
+        </div>
       )}
 
       <div className="list">
-        {rows.map((r) => (
-          <button key={r.id} className="list-item" onClick={() => navigate(`/testing/${r.id}`)}>
-            <Avatar name={r.formulations?.code ?? '?'} />
-            <span className="list-item-body">
-              <span className="list-item-code">
-                {r.formulations?.code} · #{r.batch_number}
+        {rows.map((r) => {
+          const product = r.formulations?.base_name ?? r.formulations?.name ?? r.formulations?.code
+          const inProgress = r.testing_status === 'in_progress'
+          return (
+            <button key={r.id} className="queue-card" onClick={() => navigate(`/testing/${r.id}`)}>
+              <span className="queue-card-main">
+                <span className="queue-card-top">
+                  <span className="queue-card-number">#{r.batch_number}</span>
+                  <span className="queue-card-time">{timeAgo(r.sent_for_testing_at)}</span>
+                </span>
+                <span className="queue-card-name">{product}</span>
+                <span className="queue-card-sub">
+                  {r.formulations?.code} · {r.supervisors?.name}
+                </span>
               </span>
-              <span className="list-item-sub">
-                {r.supervisors?.name} · {r.batch_date}
-                {r.testing_status === 'in_progress' && ' · testing in progress'}
+              <span className={`queue-card-status ${inProgress ? 'in-progress' : ''}`}>
+                {inProgress ? 'In progress' : 'New'}
               </span>
-            </span>
-          </button>
-        ))}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

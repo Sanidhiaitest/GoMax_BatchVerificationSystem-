@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
 import AppHeader from '../AppHeader'
 import { avatarColors, initials } from '../avatar'
+import { variantSwatch } from '../variants'
 import type { Formulation } from '../types'
 
 interface RecentBatch {
@@ -27,8 +28,6 @@ function timeAgo(iso: string): string {
   return `${days}d ago`
 }
 
-const GREY_SWATCH = { bg: '#d9d9d6', fg: '#1c1c1a' }
-const WHITE_SWATCH = { bg: '#fdfbf5', fg: '#1c1c1a' }
 
 export default function FormulationSelect() {
   const { supervisor, logout } = useSupervisor()
@@ -155,9 +154,8 @@ function ProductCard({ formulation, onPick }: { formulation: Formulation; onPick
   const subLine = isVariant ? formulation.name ?? formulation.code : formulation.code
   const typeLabel = formulation.category ?? 'Formula'
 
+  const swatch = variantSwatch(formulation.variant) ?? avatarColors(formulation.code)
   const variantKey = (formulation.variant ?? '').toLowerCase()
-  const swatch =
-    variantKey === 'grey' ? GREY_SWATCH : variantKey === 'white' ? WHITE_SWATCH : avatarColors(formulation.code)
 
   return (
     <button className="product-card" onClick={onPick}>
@@ -167,7 +165,9 @@ function ProductCard({ formulation, onPick }: { formulation: Formulation; onPick
         {subLine && subLine !== headline && <span className="product-card-sub">{subLine}</span>}
         {isVariant && (
           <span className="product-card-badges">
-            <span className="product-badge product-badge-accent">{formulation.variant}</span>
+            <span className={`product-badge product-badge-variant variant-${variantKey}`}>
+              {formulation.variant}
+            </span>
           </span>
         )}
       </span>

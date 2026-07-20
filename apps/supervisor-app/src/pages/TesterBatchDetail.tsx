@@ -2,11 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
-import Avatar from '../Avatar'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithRelations extends Batch {
-  formulations: { code: string; name: string | null } | null
+  formulations: { code: string; name: string | null; base_name: string | null } | null
   supervisors: { name: string } | null
 }
 
@@ -25,7 +24,7 @@ export default function TesterBatchDetail() {
     const [{ data: b, error: bErr }, { data: m }] = await Promise.all([
       supabase
         .from('batches')
-        .select('*, formulations(code, name), supervisors!batches_supervisor_id_fkey(name)')
+        .select('*, formulations(code, name, base_name), supervisors!batches_supervisor_id_fkey(name)')
         .eq('id', batchId)
         .single(),
       supabase.from('batch_materials').select('*').eq('batch_id', batchId).order('sort_order'),
@@ -66,77 +65,132 @@ export default function TesterBatchDetail() {
     )
   }
 
+  const product = batch.formulations?.base_name ?? batch.formulations?.name ?? batch.formulations?.code
+  const done = batch.testing_status === 'passed' || batch.testing_status === 'failed'
+
   return (
-    <div className="screen">
-      <div className="top-bar top-bar-stacked">
+    <div className="tester-screen">
+      <div className="tester-hero">
         <button className="link-btn back-btn" onClick={() => navigate('/testing')}>
           ← Back to queue
         </button>
-        <div className="batch-row-left">
-          <Avatar name={batch.formulations?.code ?? '?'} />
-          <div>
-            <p className="top-bar-title">
-              {batch.formulations?.code} · #{batch.batch_number}
-            </p>
-            <p className="hint-text">
-              {batch.supervisors?.name} · {batch.batch_date}
-            </p>
-          </div>
+        <div className="tester-hero-body">
+          <span className="tester-hero-number">#{batch.batch_number}</span>
+          <span className="tester-hero-name">{product}</span>
+          <span className="tester-hero-sub">
+            {batch.formulations?.code} · {batch.supervisors?.name} · {batch.batch_date}
+          </span>
         </div>
       </div>
 
-      <div className="list">
-        {materials.map((m) => (
-          <div key={m.id} className="material-row material-row-locked">
-            <div className="material-row-main">
-              <span className="material-desc-group">
-                <Avatar name={m.description} size={32} />
-                <p className="material-desc">{m.description}</p>
-              </span>
-              <span className="hint-text">Qty: {m.quantity ?? '—'}</span>
-            </div>
+      <div className="tester-sheet">
+        <div className="setup-sheet-handle" />
+
+        <section className="setup-section">
+          <h2 className="setup-section-title">Materials in this batch</h2>
+          <div className="tester-material-list">
+            {materials.map((m) => (
+              <div key={m.id} className="tester-material-row">
+                <span className="tester-material-name">{m.description}</span>
+                <span className={`tester-material-qty ${m.status !== 'added' ? 'skipped' : ''}`}>
+                  {m.status === 'added' ? `${m.quantity ?? '—'}` : m.status === 'skipped' ? 'Skipped' : '—'}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </section>
+
+        {error && <p className="error-text">{error}</p>}
+
+        {batch.testing_status === 'pending' && (
+          <button className="btn btn-primary" onClick={handleStart} disabled={busy}>
+            {busy ? 'Starting…' : '🧪 Start Testing'}
+          </button>
+        )}
+
+        {batch.testing_status === 'in_progress' && batch.testing_started_at && (
+          <CompleteTestingForm batchId={batch.id} onDone={load} />
+        )}
+
+        {done && (
+          <TestResult batch={batch} testerName={supervisor?.name ?? ''} />
+        )}
       </div>
+    </div>
+  )
+}
 
-      {error && <p className="error-text">{error}</p>}
+function TestResult({ batch, testerName }: { batch: BatchWithRelations; testerName: string }) {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
-      {batch.testing_status === 'pending' && (
-        <button className="btn btn-primary" onClick={handleStart} disabled={busy}>
-          {busy ? 'Starting…' : 'Start Testing'}
-        </button>
-      )}
+  useEffect(() => {
+    if (!batch.test_photo_path) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.storage.from('testing-photos').createSignedUrl(batch.test_photo_path!, 600)
+      if (!cancelled && data) setPhotoUrl(data.signedUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [batch.test_photo_path])
 
-      {batch.testing_status === 'in_progress' && batch.testing_started_at && (
-        <CompleteTestingForm batchId={batch.id} onDone={load} />
-      )}
+  const passed = batch.testing_status === 'passed'
 
-      {(batch.testing_status === 'passed' || batch.testing_status === 'failed') && (
-        <div className={`stat-banner ${batch.testing_status === 'failed' ? 'stat-banner-danger' : ''}`}>
-          <span className="stat-banner-value">{batch.testing_status === 'passed' ? '✓ Passed' : '✗ Failed'}</span>
-          <span className="stat-banner-label">
-            tested by {supervisor?.name}
+  return (
+    <section className="setup-section">
+      <div className={`result-banner ${passed ? 'result-pass' : 'result-fail'}`}>
+        <span className="result-banner-icon">{passed ? '✓' : '✗'}</span>
+        <div>
+          <span className="result-banner-title">{passed ? 'Test Passed' : 'Test Failed'}</span>
+          <span className="result-banner-sub">
+            by {testerName}
             {batch.testing_completed_at && ` · ${new Date(batch.testing_completed_at).toLocaleString()}`}
           </span>
         </div>
+      </div>
+
+      {photoUrl && (
+        <a href={photoUrl} target="_blank" rel="noreferrer" className="result-photo">
+          <img src={photoUrl} alt="Test evidence" />
+        </a>
       )}
-      {(batch.testing_status === 'passed' || batch.testing_status === 'failed') && batch.test_remarks && (
-        <p className="hint-text">"{batch.test_remarks}"</p>
-      )}
-    </div>
+
+      {batch.test_remarks && <p className="result-remarks">"{batch.test_remarks}"</p>}
+    </section>
   )
 }
 
 function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () => void }) {
   const [remarks, setRemarks] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null)
+
+  function pickPhoto(file: File | null) {
+    setPhotoFile(file)
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return file ? URL.createObjectURL(file) : null
+    })
+  }
 
   async function complete(result: 'passed' | 'failed') {
     setSubmitting(true)
     setError(null)
     try {
+      let photoPath: string | null = null
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop() || 'jpg'
+        const path = `${batchId}/${Date.now()}.${ext}`
+        const { error: upErr } = await supabase.storage.from('testing-photos').upload(path, photoFile)
+        if (upErr) throw upErr
+        photoPath = path
+      }
+
       let audioPath: string | null = null
       if (audioBlob) {
         const path = `${batchId}/${Date.now()}.webm`
@@ -144,11 +198,13 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
         if (uploadError) throw uploadError
         audioPath = path
       }
+
       const { error: rpcError } = await supabase.rpc('complete_testing', {
         p_batch_id: batchId,
         p_result: result,
         p_remarks: remarks.trim() || null,
         p_remarks_audio_path: audioPath,
+        p_photo_path: photoPath,
       })
       if (rpcError) throw rpcError
       onDone()
@@ -161,26 +217,58 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
 
   return (
     <div className="testing-form">
-      <label className="field">
-        <span className="field-label">Remarks (optional)</span>
+      <section className="setup-section">
+        <h2 className="setup-section-title">Test photo</h2>
+        <p className="hint-text">Photo of the sample or result</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={(e) => pickPhoto(e.target.files?.[0] ?? null)}
+        />
+        {photoPreview ? (
+          <div className="photo-preview">
+            <img src={photoPreview} alt="Selected" />
+            <div className="photo-preview-actions">
+              <button type="button" className="material-skip-btn" onClick={() => fileRef.current?.click()}>
+                Retake
+              </button>
+              <button type="button" className="link-btn" onClick={() => pickPhoto(null)}>
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="photo-dropzone" onClick={() => fileRef.current?.click()}>
+            <span className="photo-dropzone-icon">📷</span>
+            <span className="photo-dropzone-title">Take / Upload Photo</span>
+            <span className="photo-dropzone-sub">Tap to open camera</span>
+          </button>
+        )}
+      </section>
+
+      <section className="setup-section">
+        <h2 className="setup-section-title">Remarks</h2>
         <textarea
           className="field-input"
           rows={3}
-          placeholder="What did you observe?"
+          placeholder="What did you observe? (optional)"
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
         />
-      </label>
+      </section>
 
       <AudioRecorder onRecorded={setAudioBlob} />
 
       {error && <p className="error-text">{error}</p>}
 
-      <div className="modal-actions">
-        <button className="btn btn-ghost" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={() => complete('failed')} disabled={submitting}>
+      <div className="tester-decision">
+        <button className="decision-btn decision-fail" onClick={() => complete('failed')} disabled={submitting}>
           ✗ Fail
         </button>
-        <button className="btn btn-primary" onClick={() => complete('passed')} disabled={submitting}>
+        <button className="decision-btn decision-pass" onClick={() => complete('passed')} disabled={submitting}>
           {submitting ? 'Saving…' : '✓ Pass'}
         </button>
       </div>
@@ -229,8 +317,8 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob | null) => void
   }
 
   return (
-    <div className="field">
-      <span className="field-label">Voice note (optional)</span>
+    <section className="setup-section">
+      <h2 className="setup-section-title">Voice note</h2>
       {recordError && <p className="error-text">{recordError}</p>}
       {!audioUrl && (
         <button
@@ -238,7 +326,7 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob | null) => void
           className={`btn ${recording ? 'btn-primary' : 'btn-ghost'}`}
           onClick={recording ? stop : start}
         >
-          {recording ? '⏹ Stop recording' : '🎙 Record voice note'}
+          {recording ? '⏹ Stop recording' : '🎙 Record voice note (optional)'}
         </button>
       )}
       {audioUrl && (
@@ -249,6 +337,6 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob | null) => void
           </button>
         </div>
       )}
-    </div>
+    </section>
   )
 }
