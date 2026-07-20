@@ -1093,3 +1093,188 @@ a {
   font-weight: 700;
   letter-spacing: 0;
 }
+
+/* ===================================================================
+   Batch detail — clear hierarchy: dark identity hero, a single verdict
+   banner (the one thing to know), then evidence, flags, materials and a
+   compact timeline last.
+   =================================================================== */
+.detail-hero {
+  background: linear-gradient(135deg, #0a1628, #1e3a5f);
+  border-radius: var(--radius);
+  padding: 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.detail-hero-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail-hero-number {
+  display: block;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ff9d6e;
+}
+
+.detail-hero-name {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.detail-hero-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.detail-hero-status {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.detail-hero-status-done {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.detail-hero-status-live {
+  background: rgba(22, 163, 74, 0.22);
+  color: #4ade80;
+}
+
+/* Verdict banner */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.verdict-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.verdict-text {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.verdict-sub {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.verdict-critical { background: var(--danger-bg); border-color: rgba(220, 38, 38, 0.25); }
+.verdict-critical .verdict-text { color: var(--danger); }
+.verdict-warning { background: var(--warning-bg); border-color: rgba(180, 83, 9, 0.25); }
+.verdict-warning .verdict-text { color: var(--warning); }
+.verdict-success { background: var(--success-bg); border-color: rgba(22, 163, 74, 0.25); }
+.verdict-success .verdict-text { color: var(--success); }
+.verdict-info { background: var(--info-bg); border-color: rgba(30, 58, 95, 0.2); }
+.verdict-info .verdict-text { color: var(--info); }
+.verdict-neutral { background: var(--surface-2); }
+
+/* Detail card (lab result container) */
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-quote {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.detail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Compact timeline (flat, not big stat cards) */
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 2px;
+  background: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--surface);
+}
+
+.timeline-compact {
+  border: none;
+}
+
+.timeline-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timeline-value {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.timeline-value-accent {
+  color: var(--accent);
+}

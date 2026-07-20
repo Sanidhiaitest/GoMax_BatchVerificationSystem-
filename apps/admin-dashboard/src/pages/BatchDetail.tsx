@@ -26,6 +26,9 @@ interface BatchDetailData {
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
 
+const clock = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+
 export default function BatchDetail() {
   const { batchId } = useParams<{ batchId: string }>()
   const [batch, setBatch] = useState<BatchDetailData | null>(null)
@@ -78,63 +81,65 @@ export default function BatchDetail() {
   const addedCount = materials.filter((m) => m.status === 'added').length
   const skippedCount = materials.filter((m) => m.status === 'skipped').length
   const pendingCount = materials.filter((m) => m.status === 'pending').length
+  const criticalFlags = flags.filter((f) => f.severity === 'critical').length
+  const warningFlags = flags.filter((f) => f.severity === 'warning').length
+
+  // The single most important line: what does the admin need to know?
+  const verdict = (() => {
+    if (batch.testing_status === 'failed')
+      return { tone: 'critical', icon: '✗', text: 'Test failed', sub: 'Rejected by the lab' }
+    if (criticalFlags > 0)
+      return { tone: 'critical', icon: '⚠', text: `${criticalFlags} critical flag${criticalFlags > 1 ? 's' : ''}`, sub: 'Needs review' }
+    if (batch.testing_status === 'passed')
+      return { tone: 'success', icon: '✓', text: 'Passed QC', sub: 'Cleared by the lab' }
+    if (warningFlags > 0)
+      return { tone: 'warning', icon: '⚠', text: `${warningFlags} warning${warningFlags > 1 ? 's' : ''}`, sub: 'Worth a look' }
+    if (batch.status === 'in_progress')
+      return { tone: 'info', icon: '●', text: 'Mixing in progress', sub: 'Not yet submitted' }
+    if (batch.testing_status === 'pending' || batch.testing_status === 'in_progress')
+      return { tone: 'info', icon: '🧪', text: 'In the lab', sub: 'Awaiting test result' }
+    return { tone: 'neutral', icon: '✓', text: 'Submitted', sub: 'Not sent for testing' }
+  })()
 
   return (
     <div className="page">
-      <Link to="/" className="link-btn back-btn">
+      <Link to="/batches" className="link-btn back-btn">
         ← Back to batches
       </Link>
 
-      <div className="batch-header">
-        <div className="batch-header-top">
-          <div className="batch-row-left">
-            <Avatar name={batch.formulations?.code ?? '?'} size={44} />
-            <div>
-              <h1 className="page-title">
-                {batch.formulations?.code} · #{batch.batch_number}
-              </h1>
-              <p className="hint-text">
-                {batch.supervisors?.name} · Mason: {batch.mason_name} · {batch.batch_date}
-              </p>
-            </div>
+      {/* Identity */}
+      <div className="detail-hero">
+        <div className="detail-hero-row">
+          <div>
+            <span className="detail-hero-number">#{batch.batch_number}</span>
+            <span className="detail-hero-name">{batch.formulations?.code}{batch.formulations?.name ? ` · ${batch.formulations.name}` : ''}</span>
           </div>
-          <span className={`status-pill status-${batch.status === 'submitted' ? 'added' : 'pending'}`}>
-            {batch.status === 'submitted' ? '✓ Submitted' : '… In progress'}
+          <span className={`detail-hero-status detail-hero-status-${batch.status === 'submitted' ? 'done' : 'live'}`}>
+            {batch.status === 'submitted' ? 'Submitted' : 'Mixing'}
           </span>
         </div>
+        <span className="detail-hero-sub">
+          {batch.supervisors?.name} · {batch.mason_name} · {batch.batch_date}
+        </span>
+      </div>
 
-        <div className="stat-row batch-stat-row">
-          <div className="stat-card stat-card-accent">
-            <span className="stat-card-value">{duration !== null ? `${duration}m` : '—'}</span>
-            <span className="stat-card-label">Start → submit</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">{new Date(batch.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span className="stat-card-label">Started</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">
-              {batch.submitted_at
-                ? new Date(batch.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '—'}
-            </span>
-            <span className="stat-card-label">Submitted</span>
-          </div>
-          <div className="stat-card" style={pendingCount > 0 ? { borderColor: 'var(--warning)' } : undefined}>
-            <span className="stat-card-value">
-              {addedCount}/{materials.length}
-            </span>
-            <span className="stat-card-label">Materials added</span>
-          </div>
+      {/* Verdict — the one thing to know */}
+      <div className={`verdict verdict-${verdict.tone}`}>
+        <span className="verdict-icon">{verdict.icon}</span>
+        <div>
+          <span className="verdict-text">{verdict.text}</span>
+          <span className="verdict-sub">{verdict.sub}</span>
         </div>
       </div>
 
+      {/* Lab result (with photo) — high in the hierarchy when present */}
       {batch.testing_status !== 'not_sent' && <LabTestingSection batch={batch} />}
 
+      {/* Flags */}
       {flags.length > 0 && (
         <section>
-          <h2 className="section-title">Flags</h2>
-          <div className="list">
+          <h2 className="section-title">Flags · {flags.length}</h2>
+          <div className="detail-stack">
             {flags.map((f) => (
               <div key={f.id} className={`flag-card severity-${f.severity}`}>
                 <div className="flag-card-head">
@@ -148,11 +153,12 @@ export default function BatchDetail() {
         </section>
       )}
 
+      {/* Materials */}
       <section>
         <h2 className="section-title">
           Materials
           <span className="hint-text">
-            ({addedCount} added · {skippedCount} skipped{pendingCount > 0 ? ` · ${pendingCount} not marked` : ''})
+            {addedCount} added · {skippedCount} skipped{pendingCount > 0 ? ` · ${pendingCount} not marked` : ''}
           </span>
         </h2>
         <div className="table-scroll">
@@ -188,6 +194,29 @@ export default function BatchDetail() {
           </table>
         </div>
       </section>
+
+      {/* Timeline — secondary, compact */}
+      <section>
+        <h2 className="section-title">Timeline</h2>
+        <div className="timeline">
+          <TimelineItem label="Started" value={clock(batch.started_at)} />
+          <TimelineItem label="Submitted" value={clock(batch.submitted_at)} />
+          <TimelineItem label="Mix time" value={duration !== null ? `${duration}m` : '—'} accent />
+          {batch.sent_for_testing_at && <TimelineItem label="Sent to lab" value={clock(batch.sent_for_testing_at)} />}
+          {batch.testing_completed_at && (
+            <TimelineItem label="Tested" value={clock(batch.testing_completed_at)} />
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function TimelineItem({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="timeline-item">
+      <span className="timeline-label">{label}</span>
+      <span className={`timeline-value ${accent ? 'timeline-value-accent' : ''}`}>{value}</span>
     </div>
   )
 }
@@ -224,14 +253,6 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
     }
   }, [batch.test_photo_path])
 
-  const testingDuration =
-    batch.testing_started_at && batch.testing_completed_at
-      ? Math.round(
-          ((new Date(batch.testing_completed_at).getTime() - new Date(batch.testing_started_at).getTime()) / 60000) *
-            10,
-        ) / 10
-      : null
-
   const resultLabel: Record<TestingStatus, string> = {
     not_sent: '',
     pending: '🧪 Awaiting testing',
@@ -240,73 +261,43 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
     failed: '✗ Failed',
   }
 
+  const done = batch.testing_status === 'passed' || batch.testing_status === 'failed'
+
   return (
     <section>
-      <h2 className="section-title">Lab Testing</h2>
-      <div className="batch-header">
-        <div className="batch-header-top">
+      <h2 className="section-title">Lab testing</h2>
+      <div className="detail-card">
+        <div className="detail-card-head">
           <span
             className={`status-pill status-${
               batch.testing_status === 'passed' ? 'added' : batch.testing_status === 'failed' ? 'skipped' : 'pending'
             }`}
-            style={{ fontSize: 15, padding: '8px 16px' }}
           >
             {resultLabel[batch.testing_status]}
           </span>
           {batch.tester && <span className="hint-text">Tester: {batch.tester.name}</span>}
         </div>
 
-        <div className="stat-row">
-          <div className="stat-card">
-            <span className="stat-card-value">
-              {batch.sent_for_testing_at
-                ? new Date(batch.sent_for_testing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '—'}
-            </span>
-            <span className="stat-card-label">Sent</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">
-              {batch.testing_started_at
-                ? new Date(batch.testing_started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '—'}
-            </span>
-            <span className="stat-card-label">Started</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">
-              {batch.testing_completed_at
-                ? new Date(batch.testing_completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '—'}
-            </span>
-            <span className="stat-card-label">Completed</span>
-          </div>
-          <div className="stat-card stat-card-accent">
-            <span className="stat-card-value">{testingDuration !== null ? `${testingDuration}m` : '—'}</span>
-            <span className="stat-card-label">Duration</span>
-          </div>
-        </div>
-
         {photoUrl && (
-          <div>
-            <p className="field-label">Test photo</p>
-            <a href={photoUrl} target="_blank" rel="noreferrer" className="test-photo-link">
-              <img src={photoUrl} alt="Test evidence" className="test-photo" />
-            </a>
-          </div>
+          <a href={photoUrl} target="_blank" rel="noreferrer" className="test-photo-link">
+            <img src={photoUrl} alt="Test evidence" className="test-photo" />
+          </a>
         )}
 
-        {batch.test_remarks && (
-          <div>
-            <p className="field-label">Remarks</p>
-            <p className="flag-message">"{batch.test_remarks}"</p>
-          </div>
-        )}
+        {batch.test_remarks && <p className="detail-quote">"{batch.test_remarks}"</p>}
 
         {audioUrl && (
           <div>
             <p className="field-label">Voice note</p>
             <audio controls src={audioUrl} style={{ width: '100%' }} />
+          </div>
+        )}
+
+        {done && (
+          <div className="timeline timeline-compact">
+            <TimelineItem label="Sent" value={clock(batch.sent_for_testing_at)} />
+            <TimelineItem label="Started" value={clock(batch.testing_started_at)} />
+            <TimelineItem label="Completed" value={clock(batch.testing_completed_at)} />
           </div>
         )}
       </div>
