@@ -81,30 +81,34 @@ export default function Supervisors() {
   return (
     <div className="page">
       <h1 className="page-title">People</h1>
+      <p className="hint-text">Mixing supervisors and lab testers who sign in with a 4-digit PIN.</p>
 
-      <form className="inline-form" onSubmit={createSupervisor}>
-        <input
-          className="field-input"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="field-input"
-          placeholder="4-digit PIN"
-          inputMode="numeric"
-          maxLength={4}
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-        />
-        <select className="field-input" value={role} onChange={(e) => setRole(e.target.value as SupervisorRole)}>
-          <option value="supervisor">Mixing supervisor</option>
-          <option value="tester">Lab tester</option>
-        </select>
-        <button className="btn btn-primary" type="submit" disabled={creating || !name.trim()}>
-          Add
-        </button>
-      </form>
+      <details className="add-panel">
+        <summary className="add-panel-trigger">＋ Add person</summary>
+        <form className="inline-form add-panel-body" onSubmit={createSupervisor}>
+          <input
+            className="field-input"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className="field-input"
+            placeholder="4-digit PIN"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          />
+          <select className="field-input" value={role} onChange={(e) => setRole(e.target.value as SupervisorRole)}>
+            <option value="supervisor">Mixing supervisor</option>
+            <option value="tester">Lab tester</option>
+          </select>
+          <button className="btn btn-primary" type="submit" disabled={creating || !name.trim()}>
+            Add person
+          </button>
+        </form>
+      </details>
 
       {error && <p className="error-text">{error}</p>}
       {loading && <p className="hint-text">Loading…</p>}

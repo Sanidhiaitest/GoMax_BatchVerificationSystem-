@@ -54,26 +54,33 @@ export default function Formulations() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Products</h1>
-      <p className="hint-text">Edits here update supervisor checklists instantly.</p>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Products</h1>
+          <p className="hint-text">Edits here update supervisor checklists instantly.</p>
+        </div>
+      </div>
 
-      <form className="inline-form" onSubmit={createFormulation}>
-        <input
-          className="field-input"
-          placeholder="Code (e.g. P20)"
-          value={newCode}
-          onChange={(e) => setNewCode(e.target.value)}
-        />
-        <input
-          className="field-input"
-          placeholder="Name (optional)"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <button className="btn btn-primary" type="submit" disabled={creating || !newCode.trim()}>
-          Add formulation
-        </button>
-      </form>
+      <details className="add-panel">
+        <summary className="add-panel-trigger">＋ Add product</summary>
+        <form className="inline-form add-panel-body" onSubmit={createFormulation}>
+          <input
+            className="field-input"
+            placeholder="Code (e.g. P20)"
+            value={newCode}
+            onChange={(e) => setNewCode(e.target.value)}
+          />
+          <input
+            className="field-input"
+            placeholder="Name (optional)"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button className="btn btn-primary" type="submit" disabled={creating || !newCode.trim()}>
+            Add product
+          </button>
+        </form>
+      </details>
 
       {error && <p className="error-text">{error}</p>}
       {loading && <p className="hint-text">Loading…</p>}
