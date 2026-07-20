@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
+import { variantSwatch } from '../variants'
 import type { Formulation, FormulationMaterial } from '../types'
 
 export default function Formulations() {
@@ -53,7 +54,7 @@ export default function Formulations() {
 
   return (
     <div className="page">
-      <h1 className="page-title">Formulations</h1>
+      <h1 className="page-title">Products</h1>
       <p className="hint-text">Edits here update supervisor checklists instantly.</p>
 
       <form className="inline-form" onSubmit={createFormulation}>
@@ -87,12 +88,22 @@ export default function Formulations() {
               <Avatar name={f.code} />
               <div className="batch-row-main">
                 <span className="list-item-code">
-                  {f.code} {!f.active && <span className="hint-text">(inactive)</span>}
+                  {f.code}{' '}
+                  {f.variant && (
+                    <span
+                      className="variant-chip"
+                      style={(() => {
+                        const s = variantSwatch(f.variant)
+                        return s ? { background: s.bg, color: s.fg } : undefined
+                      })()}
+                    >
+                      {f.variant}
+                    </span>
+                  )}
+                  {!f.active && <span className="hint-text"> (inactive)</span>}
                 </span>
                 <span className="list-item-sub">
-                  {[f.category, f.base_name && f.variant ? `${f.base_name} · ${f.variant}` : null, f.name]
-                    .filter(Boolean)
-                    .join(' · ') || 'Not categorized'}
+                  {[f.category, f.base_name, f.name].filter(Boolean).join(' · ') || 'Not categorized'}
                 </span>
               </div>
             </button>
