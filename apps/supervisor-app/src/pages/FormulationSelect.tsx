@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
 import AppHeader from '../AppHeader'
-import { avatarColors, initials } from '../avatar'
-import { variantSwatch } from '../variants'
+import ProductImage from '../ProductImage'
 import type { Formulation } from '../types'
 
 interface RecentBatch {
@@ -154,7 +153,6 @@ function ProductCard({ formulation, onPick }: { formulation: Formulation; onPick
   const subLine = isVariant ? formulation.name ?? formulation.code : formulation.code
   const typeLabel = formulation.category ?? 'Formula'
 
-  const swatch = variantSwatch(formulation.variant) ?? avatarColors(formulation.code)
   const variantKey = (formulation.variant ?? '').toLowerCase()
 
   return (
@@ -171,9 +169,7 @@ function ProductCard({ formulation, onPick }: { formulation: Formulation; onPick
           </span>
         )}
       </span>
-      <span className="product-card-swatch" style={{ background: swatch.bg, color: swatch.fg }}>
-        {initials(formulation.code)}
-      </span>
+      <ProductImage formulation={formulation} className="product-card-swatch" />
     </button>
   )
 }

@@ -588,6 +588,20 @@ textarea.field-input {
   font-weight: 800;
   letter-spacing: -0.02em;
   text-align: center;
+  overflow: hidden;
+}
+
+/* Real product photo fills the swatch panel edge-to-edge (no padding),
+   cropping to cover; the colored-initials fallback keeps the padding. */
+.product-card-swatch:has(.product-image-photo) {
+  padding: 0;
+}
+
+.product-image-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Grey/White variant badge — Grey and White are genuinely different
