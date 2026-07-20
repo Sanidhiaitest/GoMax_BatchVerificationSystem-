@@ -18,6 +18,7 @@ interface BatchDetailData {
   testing_completed_at: string | null
   test_remarks: string | null
   test_remarks_audio_path: string | null
+  test_photo_path: string | null
   formulations: { code: string; name: string | null } | null
   supervisors: { name: string } | null
   tester: { name: string } | null
@@ -193,6 +194,7 @@ export default function BatchDetail() {
 
 function LabTestingSection({ batch }: { batch: BatchDetailData }) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!batch.test_remarks_audio_path) return
@@ -207,6 +209,20 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
       cancelled = true
     }
   }, [batch.test_remarks_audio_path])
+
+  useEffect(() => {
+    if (!batch.test_photo_path) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.storage
+        .from('testing-photos')
+        .createSignedUrl(batch.test_photo_path!, 3600)
+      if (!cancelled && data) setPhotoUrl(data.signedUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [batch.test_photo_path])
 
   const testingDuration =
     batch.testing_started_at && batch.testing_completed_at
@@ -270,6 +286,15 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
             <span className="stat-card-label">Duration</span>
           </div>
         </div>
+
+        {photoUrl && (
+          <div>
+            <p className="field-label">Test photo</p>
+            <a href={photoUrl} target="_blank" rel="noreferrer" className="test-photo-link">
+              <img src={photoUrl} alt="Test evidence" className="test-photo" />
+            </a>
+          </div>
+        )}
 
         {batch.test_remarks && (
           <div>

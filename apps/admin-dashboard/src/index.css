@@ -1,29 +1,32 @@
 :root {
-  --bg: #eef1fb;
-  --mesh: radial-gradient(60% 50% at 15% 0%, rgba(99, 102, 241, 0.16), transparent),
-    radial-gradient(50% 45% at 100% 15%, rgba(56, 189, 248, 0.14), transparent),
-    radial-gradient(60% 40% at 50% 100%, rgba(129, 140, 248, 0.1), transparent);
+  /* GoMax brand palette — kept in sync with the supervisor app: navy
+     text + terracotta-orange accent, semantic green kept separate for
+     pass/success so it never blends into the brand-coloured buttons. */
+  --bg: #f6f7f9;
+  --mesh: radial-gradient(60% 50% at 15% 0%, rgba(193, 68, 14, 0.1), transparent),
+    radial-gradient(50% 45% at 100% 15%, rgba(30, 58, 95, 0.1), transparent),
+    radial-gradient(60% 40% at 50% 100%, rgba(193, 68, 14, 0.06), transparent);
   --surface: #ffffff;
-  --surface-2: #f8fafc;
-  --glass: rgba(255, 255, 255, 0.68);
+  --surface-2: #eef2f8;
+  --glass: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(255, 255, 255, 0.9);
-  --text: #0f172a;
-  --text-dim: #64748b;
-  --border: #e6e9f2;
-  --accent: #4f46e5;
-  --accent-dim: #4338ca;
-  --accent-bg: #eef2ff;
+  --text: #0a1628;
+  --text-dim: rgba(10, 22, 40, 0.6);
+  --border: rgba(10, 22, 40, 0.1);
+  --accent: #c1440e;
+  --accent-dim: #9c3609;
+  --accent-bg: rgba(193, 68, 14, 0.08);
   --danger: #dc2626;
   --danger-bg: #fee2e2;
   --warning: #b45309;
   --warning-bg: #fef3c7;
-  --info: #0369a1;
-  --info-bg: #e0f2fe;
-  --success: #15803d;
+  --info: #1e3a5f;
+  --info-bg: rgba(30, 58, 95, 0.1);
+  --success: #16a34a;
   --success-bg: #dcfce7;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 8px 24px -6px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 24px 56px -16px rgba(15, 23, 42, 0.25);
+  --shadow-sm: 0 1px 2px rgba(10, 22, 40, 0.06);
+  --shadow-md: 0 8px 24px -6px rgba(10, 22, 40, 0.12);
+  --shadow-lg: 0 24px 56px -16px rgba(10, 22, 40, 0.25);
   --radius: 16px;
   --radius-sm: 12px;
   color-scheme: light;
@@ -33,26 +36,27 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #070a13;
-    --mesh: radial-gradient(60% 50% at 10% 0%, rgba(99, 102, 241, 0.22), transparent),
-      radial-gradient(50% 45% at 100% 10%, rgba(56, 189, 248, 0.16), transparent),
-      radial-gradient(55% 40% at 50% 100%, rgba(129, 140, 248, 0.12), transparent);
-    --surface: #121a2c;
-    --surface-2: #0d1424;
-    --glass: rgba(18, 26, 44, 0.6);
+    /* GoMax navy in place of the old near-black indigo. */
+    --bg: #050c18;
+    --mesh: radial-gradient(60% 50% at 10% 0%, rgba(193, 68, 14, 0.18), transparent),
+      radial-gradient(50% 45% at 100% 10%, rgba(30, 58, 95, 0.28), transparent),
+      radial-gradient(55% 40% at 50% 100%, rgba(193, 68, 14, 0.1), transparent);
+    --surface: #0d1f3c;
+    --surface-2: #0a1830;
+    --glass: rgba(13, 31, 60, 0.6);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --text: #f1f5f9;
+    --text: #f4f6fb;
     --text-dim: #8b96ad;
-    --border: #212c47;
-    --accent: #818cf8;
-    --accent-dim: #6366f1;
-    --accent-bg: rgba(129, 140, 248, 0.14);
+    --border: #1c2c49;
+    --accent: #e2622a;
+    --accent-dim: #c1440e;
+    --accent-bg: rgba(226, 98, 42, 0.16);
     --danger: #f87171;
     --danger-bg: rgba(248, 113, 113, 0.14);
     --warning: #fbbf24;
     --warning-bg: rgba(251, 191, 36, 0.14);
-    --info: #38bdf8;
-    --info-bg: rgba(56, 189, 248, 0.14);
+    --info: #7da2c9;
+    --info-bg: rgba(125, 162, 201, 0.14);
     --success: #4ade80;
     --success-bg: rgba(74, 222, 128, 0.14);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -852,4 +856,17 @@ a {
     flex: 1;
     padding-bottom: 0;
   }
+}
+
+/* Test evidence photo (uploaded by the tester) */
+.test-photo-link {
+  display: block;
+}
+
+.test-photo {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
