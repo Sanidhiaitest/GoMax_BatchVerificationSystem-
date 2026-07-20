@@ -105,7 +105,9 @@ export default function Login() {
             ← Back
           </button>
           <div className="pin-screen-identity">
-            <Avatar name={selected.name} size={64} />
+            <span className="pin-screen-avatar-box">
+              <Avatar name={selected.name} size={40} />
+            </span>
             <div>
               <p className="hint-text">Hello,</p>
               <p className="pin-screen-name">{selected.name}</p>

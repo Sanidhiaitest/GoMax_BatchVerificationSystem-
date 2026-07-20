@@ -2,13 +2,38 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
-import Avatar from '../Avatar'
-import IdentityTopBar from '../IdentityTopBar'
+import AppHeader from '../AppHeader'
+import { avatarColors, initials } from '../avatar'
 import type { Formulation } from '../types'
+
+interface RecentBatch {
+  id: string
+  batch_number: string
+  batch_date: string
+  started_at: string
+  mason_name: string
+  formulations: { code: string; base_name: string | null; name: string | null } | null
+}
+
+function timeAgo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const mins = Math.round(diffMs / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'Yesterday'
+  return `${days}d ago`
+}
+
+const GREY_SWATCH = { bg: '#d9d9d6', fg: '#1c1c1a' }
+const WHITE_SWATCH = { bg: '#fdfbf5', fg: '#1c1c1a' }
 
 export default function FormulationSelect() {
   const { supervisor, logout } = useSupervisor()
   const [formulations, setFormulations] = useState<Formulation[]>([])
+  const [recent, setRecent] = useState<RecentBatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [category, setCategory] = useState('All')
@@ -34,6 +59,22 @@ export default function FormulationSelect() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('batches')
+        .select('id, batch_number, batch_date, started_at, mason_name, formulations(code, base_name, name)')
+        .order('started_at', { ascending: false })
+        .limit(6)
+      if (cancelled) return
+      setRecent((data as unknown as RecentBatch[]) ?? [])
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const categories = useMemo(() => {
     const set = new Set<string>()
     formulations.forEach((f) => f.category && set.add(f.category))
@@ -47,7 +88,7 @@ export default function FormulationSelect() {
 
   return (
     <div className="screen">
-      <IdentityTopBar
+      <AppHeader
         name={supervisor?.name ?? ''}
         historyLabel="History"
         onHistory={() => navigate('/history')}
@@ -55,10 +96,10 @@ export default function FormulationSelect() {
       />
 
       <div className="greeting">
-        <h1 className="title">
-          <span className="title-highlight">Hello,</span> {firstName}! 👋
+        <h1 className="title picker-title">
+          Hi {firstName}, what are you mixing? 👋
         </h1>
-        <p className="subtitle">Ready to start a batch?</p>
+        <p className="subtitle picker-subtitle">Pick a product to start</p>
       </div>
 
       {categories.length > 2 && (
@@ -75,6 +116,21 @@ export default function FormulationSelect() {
         </div>
       )}
 
+      {recent.length > 0 && (
+        <div className="recent-batches">
+          {recent.map((b) => (
+            <button key={b.id} className="recent-batch-card" onClick={() => navigate(`/batch/${b.id}`)}>
+              <span className="recent-batch-top">
+                <span className="recent-batch-number">#{b.batch_number}</span>
+                <span className="recent-batch-time">{timeAgo(b.started_at)}</span>
+              </span>
+              <span className="recent-batch-name">{b.formulations?.base_name ?? b.formulations?.code}</span>
+              <span className="recent-batch-sub">{b.mason_name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading && <p className="hint-text">Loading formulations…</p>}
       {error && <p className="error-text">{error}</p>}
       {!loading && formulations.length === 0 && !error && (
@@ -85,34 +141,38 @@ export default function FormulationSelect() {
       )}
 
       <div className="list">
-        {filtered.map((f) =>
-          f.base_name && f.variant ? (
-            <VariantCard key={f.id} formulation={f} onPick={() => navigate(`/batch/new/${f.id}`)} />
-          ) : (
-            <button key={f.id} className="list-item" onClick={() => navigate(`/batch/new/${f.id}`)}>
-              <Avatar name={f.code} />
-              <span className="list-item-body">
-                <span className="list-item-code">{f.code}</span>
-                {f.name && <span className="list-item-sub">{f.name}</span>}
-              </span>
-            </button>
-          ),
-        )}
+        {filtered.map((f) => (
+          <ProductCard key={f.id} formulation={f} onPick={() => navigate(`/batch/new/${f.id}`)} />
+        ))}
       </div>
     </div>
   )
 }
 
-function VariantCard({ formulation, onPick }: { formulation: Formulation; onPick: () => void }) {
+function ProductCard({ formulation, onPick }: { formulation: Formulation; onPick: () => void }) {
+  const isVariant = Boolean(formulation.base_name && formulation.variant)
+  const headline = formulation.base_name ?? formulation.name ?? formulation.code
+  const subLine = isVariant ? formulation.name ?? formulation.code : formulation.code
+  const typeLabel = formulation.category ?? 'Formula'
+
   const variantKey = (formulation.variant ?? '').toLowerCase()
+  const swatch =
+    variantKey === 'grey' ? GREY_SWATCH : variantKey === 'white' ? WHITE_SWATCH : avatarColors(formulation.code)
+
   return (
-    <button
-      className={`list-item variant-card variant-card-${variantKey}`}
-      onClick={onPick}
-    >
-      <span className="variant-card-body">
-        <span className="variant-card-base">{formulation.base_name}</span>
-        <span className="variant-card-variant">{formulation.variant}</span>
+    <button className="product-card" onClick={onPick}>
+      <span className="product-card-main">
+        <span className="product-card-type">{typeLabel}</span>
+        <span className="product-card-name">{headline}</span>
+        {subLine && subLine !== headline && <span className="product-card-sub">{subLine}</span>}
+        {isVariant && (
+          <span className="product-card-badges">
+            <span className="product-badge product-badge-accent">{formulation.variant}</span>
+          </span>
+        )}
+      </span>
+      <span className="product-card-swatch" style={{ background: swatch.bg, color: swatch.fg }}>
+        {initials(formulation.code)}
       </span>
     </button>
   )

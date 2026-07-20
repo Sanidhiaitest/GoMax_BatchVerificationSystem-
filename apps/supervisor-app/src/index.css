@@ -281,55 +281,53 @@ textarea.field-input {
 /* PIN pad */
 .pin-dots {
   display: flex;
-  gap: 18px;
-  margin: 12px 0 28px;
+  gap: 10px;
+  margin: 4px 0 8px;
 }
 
 .pin-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: transparent;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(10, 22, 40, 0.12);
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .pin-dot.filled {
   background: var(--accent);
-  border-color: var(--accent);
-  transform: scale(1.15);
+  transform: scale(1.1);
   box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 .keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 10px;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .key {
-  aspect-ratio: 1;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  color: var(--text);
-  font-size: 26px;
+  aspect-ratio: 108.66 / 60;
+  border-radius: 14px;
+  border: 1.5px solid rgba(10, 22, 40, 0.1);
+  background: rgba(10, 22, 40, 0.04);
+  color: #0a1628;
+  font-size: 24px;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
   transition: transform 0.08s ease, background-color 0.15s ease;
 }
 
 .key:active {
-  background: var(--surface-hover);
-  transform: scale(0.94);
+  background: rgba(10, 22, 40, 0.08);
+  transform: scale(0.96);
 }
 
 .key-ghost {
   background: transparent;
   border: none;
-  color: var(--text-dim);
+  color: rgba(10, 22, 40, 0.38);
+  font-size: 20px;
   box-shadow: none;
 }
 
@@ -422,20 +420,166 @@ textarea.field-input {
 
 .category-tab {
   flex-shrink: 0;
-  padding: 9px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-dim);
-  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: none;
+  background: #ffffff;
+  color: rgba(10, 22, 40, 0.38);
+  font-size: 13px;
   font-weight: 700;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .category-tab.active {
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
+  box-shadow: 0 3px 10px rgba(193, 68, 14, 0.3);
+}
+
+/* Recent batches — small horizontal-scroll strip above the product list */
+.recent-batches {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin: -4px 0;
+  scrollbar-width: none;
+}
+
+.recent-batches::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-batch-card {
+  flex-shrink: 0;
+  width: 150px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(10, 22, 40, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.recent-batch-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recent-batch-number {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(193, 68, 14, 0.07);
+  border: 1px solid rgba(193, 68, 14, 0.15);
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.recent-batch-time {
+  font-size: 10px;
+  color: rgba(10, 22, 40, 0.38);
+}
+
+.recent-batch-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a1628;
+}
+
+.recent-batch-sub {
+  font-size: 11px;
+  color: rgba(10, 22, 40, 0.38);
+}
+
+/* Product list cards: name/type/badges on the left, a colored swatch
+   (placeholder for real product photography) pinned to the right. */
+.product-card {
+  display: flex;
+  align-items: stretch;
+  min-height: 108px;
+  background: #ffffff;
+  border: 1px solid rgba(10, 22, 40, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border-radius: 20px;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.1s ease;
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+.product-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 16px 14px 16px 18px;
+}
+
+.product-card-type {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.product-card-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #0a1628;
+}
+
+.product-card-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(10, 22, 40, 0.38);
+}
+
+.product-card-badges {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.product-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(10, 22, 40, 0.04);
+  border: 1px solid rgba(10, 22, 40, 0.1);
+  color: #0a1628;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.product-badge-accent {
+  background: rgba(193, 68, 14, 0.07);
+  border-color: rgba(193, 68, 14, 0.15);
+  color: var(--accent);
+}
+
+.product-card-swatch {
+  width: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
 }
 
 /* Grey/White variant cards — each variant is its own card, colored to
@@ -618,6 +762,42 @@ textarea.field-input {
 
 .modal-actions .btn {
   flex: 1;
+}
+
+.modal-actions-column {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.modal-actions-column .link-btn {
+  align-self: center;
+  margin-top: 2px;
+}
+
+/* Light header (badge/wordmark + avatar) used on light-theme screens,
+   as opposed to the dark full-bleed .top-bar used elsewhere. */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: env(safe-area-inset-top);
+}
+
+.app-header-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2f8;
+  border: 1px solid rgba(10, 22, 40, 0.1);
+  border-radius: 12px;
+  transition: transform 0.1s ease;
+}
+
+.app-header-avatar:active {
+  transform: scale(0.92);
 }
 
 /* Material checklist rows */
@@ -870,8 +1050,9 @@ textarea.field-input {
   text-align: center;
 }
 
-/* PIN entry: dark identity header + white bottom sheet, replacing the old
-   single-tone screen so it matches the two-zone reference layout. */
+/* PIN entry: dark gradient identity header + white bottom sheet — the one
+   deliberately dark screen in an otherwise light app, matching the Figma
+   spec's "photo booth → PIN" hand-off moment. */
 .pin-screen {
   flex: 1;
   display: flex;
@@ -883,9 +1064,9 @@ textarea.field-input {
 }
 
 .pin-screen-header {
-  background: var(--topbar-bg);
-  color: var(--topbar-text);
-  padding: calc(20px + env(safe-area-inset-top)) 20px 32px;
+  background: linear-gradient(141.48deg, #000000 13.68%, #002040 68.82%);
+  color: #ffffff;
+  padding: calc(32px + env(safe-area-inset-top)) 22px 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -894,10 +1075,12 @@ textarea.field-input {
 .pin-screen-header .back-btn {
   align-self: flex-start;
   padding-left: 0;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .pin-screen-header .hint-text {
-  color: var(--topbar-text-dim);
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 12px;
 }
 
 .pin-screen-identity {
@@ -906,20 +1089,31 @@ textarea.field-input {
   gap: 14px;
 }
 
+.pin-screen-avatar-box {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2f8;
+  border-radius: 18px;
+}
+
 .pin-screen-name {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-  color: var(--topbar-text);
-  letter-spacing: -0.01em;
-  margin: 2px 0 0;
+  color: #ffffff;
+  letter-spacing: -0.4px;
+  margin: 3px 0 0;
 }
 
 .pin-sheet {
   flex: 1;
-  background: var(--surface);
-  border-radius: 24px 24px 0 0;
+  background: #ffffff;
+  border-radius: 26px 26px 0 0;
   margin-top: -20px;
-  padding: 20px 24px calc(28px + env(safe-area-inset-bottom));
+  padding: 4px 22px calc(28px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -927,10 +1121,15 @@ textarea.field-input {
   box-shadow: var(--shadow-lg);
 }
 
+.pin-sheet .hint-text {
+  font-size: 13px;
+  color: rgba(10, 22, 40, 0.38);
+}
+
 .pin-sheet-handle {
-  width: 40px;
+  width: 34px;
   height: 4px;
   border-radius: 999px;
-  background: var(--border);
-  margin-bottom: 4px;
+  background: rgba(10, 22, 40, 0.1);
+  margin: 10px 0 2px;
 }
