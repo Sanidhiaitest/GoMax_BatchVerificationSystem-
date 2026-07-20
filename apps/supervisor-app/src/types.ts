@@ -51,3 +51,10 @@ export interface SupervisorSession {
   name: string
   role: SupervisorRole
 }
+
+export interface SupervisorRoster {
+  id: string
+  name: string
+  active: boolean
+  role: SupervisorRole
+}
