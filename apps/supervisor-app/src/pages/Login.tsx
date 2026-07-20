@@ -177,7 +177,7 @@ export default function Login() {
             onClick={() => setSelected(s)}
           >
             <span className="person-card-photo">
-              <Avatar name={s.name} size={56} />
+              <Avatar name={s.name} shape="fill" />
             </span>
             <span className="person-card-nameplate">{s.name}</span>
           </button>

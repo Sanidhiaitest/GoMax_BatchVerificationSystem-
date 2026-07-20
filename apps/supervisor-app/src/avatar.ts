@@ -25,14 +25,18 @@ export function avatarColors(name: string): { bg: string; fg: string } {
   return { bg, fg }
 }
 
+// How many illustrated worker avatars live in public/avatars/ (1.png..N.png).
+const AVATAR_IMAGE_COUNT = 6
+
+// Pick one of the illustrated avatars deterministically from the name, so a
+// given person shows the same character on every screen. They're generic
+// (not photos of specific people), so a stable hash-to-index is fine.
+export function avatarImageSrc(name: string): string {
+  return `/avatars/${(hash(name) % AVATAR_IMAGE_COUNT) + 1}.png`
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[1][0]).toUpperCase()
-}
-
-// e.g. "Ravi Sharma" -> "ravi-sharma" — matches the filename Avatar looks
-// for under public/avatars/.
-export function avatarSlug(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, '-')
 }
