@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext'
 import Login from './pages/Login'
 import Layout from './Layout'
+import Overview from './pages/Overview'
 import BatchList from './pages/BatchList'
 import BatchDetail from './pages/BatchDetail'
 import Formulations from './pages/Formulations'
@@ -44,7 +45,8 @@ export default function App() {
               </Gate>
             }
           >
-            <Route index element={<BatchList />} />
+            <Route index element={<Overview />} />
+            <Route path="batches" element={<BatchList />} />
             <Route path="batch/:batchId" element={<BatchDetail />} />
             <Route path="formulations" element={<Formulations />} />
             <Route path="supervisors" element={<Supervisors />} />

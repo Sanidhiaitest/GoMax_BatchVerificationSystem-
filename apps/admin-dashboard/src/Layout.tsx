@@ -8,19 +8,29 @@ export default function Layout() {
     <div className="app-shell">
       <nav className="bottom-nav">
         <NavLink to="/" end className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+          <span className="bottom-nav-icon">🏭</span>
+          Overview
+        </NavLink>
+        <NavLink
+          to="/batches"
+          className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">📋</span>
           Batches
         </NavLink>
         <NavLink
           to="/formulations"
           className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
         >
-          Formulations
+          <span className="bottom-nav-icon">🧪</span>
+          Products
         </NavLink>
         <NavLink
           to="/supervisors"
           className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
         >
-          Supervisors
+          <span className="bottom-nav-icon">👷</span>
+          People
         </NavLink>
       </nav>
 

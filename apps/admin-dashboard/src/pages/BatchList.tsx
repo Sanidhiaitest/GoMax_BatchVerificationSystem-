@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
@@ -13,12 +13,41 @@ const TESTING_LABEL: Record<string, string> = {
   failed: '✗ Failed',
 }
 
+const today = () => new Date().toISOString().slice(0, 10)
+
+// Quick status chips — the primary, click-first way to slice the list.
+const STATUS_CHIPS: { key: string; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'mixing', label: '🔵 Mixing' },
+  { key: 'awaiting', label: '🧪 Awaiting test' },
+  { key: 'attention', label: '⚠️ Attention' },
+  { key: 'today', label: '✓ Done today' },
+]
+
+function matchesStatus(b: BatchListRow & { submitted_at?: string | null }, status: string): boolean {
+  switch (status) {
+    case 'mixing':
+      return b.status === 'in_progress'
+    case 'awaiting':
+      return b.testing_status === 'pending' || b.testing_status === 'in_progress'
+    case 'attention':
+      return b.batch_flags.length > 0 || b.testing_status === 'failed'
+    case 'today':
+      return b.status === 'submitted' && (b.submitted_at ?? '').slice(0, 10) === today()
+    default:
+      return true
+  }
+}
+
 export default function BatchList() {
   const [batches, setBatches] = useState<BatchListRow[]>([])
   const [formulations, setFormulations] = useState<Formulation[]>([])
   const [supervisors, setSupervisors] = useState<SupervisorPublic[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusChip = searchParams.get('status') ?? 'all'
 
   const [dateFilter, setDateFilter] = useState('')
   const [supervisorFilter, setSupervisorFilter] = useState('')
@@ -27,6 +56,13 @@ export default function BatchList() {
 
   const mixers = useMemo(() => supervisors.filter((s) => s.role === 'supervisor'), [supervisors])
   const testers = useMemo(() => supervisors.filter((s) => s.role === 'tester'), [supervisors])
+
+  function setStatusChip(key: string) {
+    const next = new URLSearchParams(searchParams)
+    if (key === 'all') next.delete('status')
+    else next.set('status', key)
+    setSearchParams(next, { replace: true })
+  }
 
   useEffect(() => {
     ;(async () => {
@@ -67,61 +103,30 @@ export default function BatchList() {
     }
   }, [dateFilter, supervisorFilter, formulationFilter, testerFilter])
 
-  const flagged = useMemo(
-    () =>
-      batches
-        .filter((b) => b.batch_flags.length > 0)
-        .sort((a, b) => {
-          const rankA = Math.min(...a.batch_flags.map((f) => SEVERITY_RANK[f.severity] ?? 3))
-          const rankB = Math.min(...b.batch_flags.map((f) => SEVERITY_RANK[f.severity] ?? 3))
-          return rankA - rankB
-        }),
-    [batches],
+  const visible = useMemo(
+    () => batches.filter((b) => matchesStatus(b, statusChip)),
+    [batches, statusChip],
   )
-
-  const inProgressCount = useMemo(() => batches.filter((b) => b.status === 'in_progress').length, [batches])
-  const criticalCount = useMemo(
-    () => batches.filter((b) => b.batch_flags.some((f) => f.severity === 'critical')).length,
-    [batches],
-  )
-  const failedTestCount = useMemo(() => batches.filter((b) => b.testing_status === 'failed').length, [batches])
 
   return (
     <div className="page">
       <h1 className="page-title">Batches</h1>
 
-      {!loading && batches.length > 0 && (
-        <div className="stat-row">
-          <div className="stat-card">
-            <span className="stat-card-value">{batches.length}</span>
-            <span className="stat-card-label">Total batches</span>
-          </div>
-          <div className="stat-card stat-card-accent">
-            <span className="stat-card-value">{inProgressCount}</span>
-            <span className="stat-card-label">In progress</span>
-          </div>
-          <div className="stat-card stat-card-warning">
-            <span className="stat-card-value">{flagged.length}</span>
-            <span className="stat-card-label">Flagged</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value" style={criticalCount > 0 ? { color: 'var(--danger)' } : undefined}>
-              {criticalCount}
-            </span>
-            <span className="stat-card-label">Critical</span>
-          </div>
-          {failedTestCount > 0 && (
-            <div className="stat-card">
-              <span className="stat-card-value" style={{ color: 'var(--danger)' }}>
-                {failedTestCount}
-              </span>
-              <span className="stat-card-label">Failed testing</span>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="chip-row">
+        {STATUS_CHIPS.map((c) => (
+          <button
+            key={c.key}
+            className={`chip ${statusChip === c.key ? 'chip-active' : ''}`}
+            onClick={() => setStatusChip(c.key)}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
 
-      <div className="filter-bar">
+      <details className="filter-details">
+        <summary className="filter-summary">More filters</summary>
+        <div className="filter-bar">
         <label className="field">
           <span className="field-label">Date</span>
           <input
@@ -187,30 +192,23 @@ export default function BatchList() {
             Clear filters
           </button>
         )}
-      </div>
+        </div>
+      </details>
 
       {error && <p className="error-text">{error}</p>}
       {loading && <p className="hint-text">Loading…</p>}
 
-      {!loading && flagged.length > 0 && (
-        <section>
-          <h2 className="section-title">Needs attention</h2>
-          <div className="list">
-            {flagged.map((b) => (
-              <BatchRow key={b.id} batch={b} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {!loading && (
         <section>
-          <h2 className="section-title">All batches</h2>
-          {batches.length === 0 ? (
-            <p className="hint-text">No batches match these filters.</p>
+          <h2 className="section-title">
+            {statusChip === 'all' ? 'All batches' : STATUS_CHIPS.find((c) => c.key === statusChip)?.label}
+            <span className="hint-text">{visible.length}</span>
+          </h2>
+          {visible.length === 0 ? (
+            <p className="hint-text">No batches here right now.</p>
           ) : (
             <div className="list">
-              {batches.map((b) => (
+              {visible.map((b) => (
                 <BatchRow key={b.id} batch={b} />
               ))}
             </div>
