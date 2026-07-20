@@ -152,14 +152,17 @@ export default function Login() {
   // what actually determines identity server-side (see login_supervisor_pin);
   // this step just makes the PIN screen feel personal instead of blind.
   return (
-    <div className="screen">
-      <GoMaxWordmark subtitle="Batch QC" />
+    <div className="picker-screen">
+      <div className="picker-header">
+        <GoMaxWordmark subtitle="Batch QC" />
 
-      <div className="greeting">
-        <h1 className="title picker-title">Kaun ho tum? 👷</h1>
-        <p className="subtitle picker-subtitle">Tap your name to sign in</p>
+        <div className="greeting">
+          <h1 className="title picker-title">Kaun ho tum? 👷</h1>
+          <p className="subtitle picker-subtitle">Tap your name to sign in</p>
+        </div>
       </div>
 
+      <div className="picker-sheet">
       {rosterError && <p className="error-text">{rosterError}</p>}
 
       <div className="person-grid">
@@ -179,6 +182,7 @@ export default function Login() {
             <span className="person-card-nameplate">{s.name}</span>
           </button>
         ))}
+      </div>
       </div>
     </div>
   )

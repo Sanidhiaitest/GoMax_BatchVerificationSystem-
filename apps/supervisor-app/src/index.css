@@ -1,30 +1,30 @@
 :root {
-  --bg: #f5f1e6;
-  --bg-elevated: radial-gradient(ellipse 120% 80% at 50% -10%, #fbf8ef 0%, #f5f1e6 55%);
-  --surface: #fffdf8;
-  --surface-2: #efe9d8;
-  --surface-hover: #e6dfc9;
-  --text: #22201a;
-  --text-dim: #756e5c;
-  --border: #e4dcc5;
-  --border-soft: #ece5d2;
-  /* GoMax brand: deep navy + terracotta-coral. --accent is the brand
-     color (buttons, active states, highlights) — kept deliberately
-     separate from --success (tick/pass green) so "done" still reads at
-     a glance on the factory floor instead of blending into the brand
-     color used for every button. */
-  --accent: #d9754a;
-  --accent-strong: #c15f39;
-  --accent-glow: rgba(217, 117, 74, 0.28);
+  --bg: #f6f7f9;
+  --bg-elevated: radial-gradient(ellipse 120% 80% at 50% -10%, #eaf1fc 0%, #f6f7f9 55%);
+  --surface: #ffffff;
+  --surface-2: #eef2f8;
+  --surface-hover: #e3e8f0;
+  --text: #0a1628;
+  --text-dim: rgba(10, 22, 40, 0.38);
+  --border: rgba(10, 22, 40, 0.1);
+  --border-soft: rgba(10, 22, 40, 0.06);
+  /* GoMax brand: navy + terracotta-orange, matched to the exact Figma
+     export. --accent is the brand color (buttons, active states,
+     highlights) — kept deliberately separate from --success (tick/pass
+     green) so "done" still reads at a glance instead of blending into
+     the brand color used for every button. */
+  --accent: #c1440e;
+  --accent-strong: #9c3609;
+  --accent-glow: rgba(193, 68, 14, 0.28);
   --success: #16a34a;
   --success-strong: #15803d;
   --success-glow: rgba(22, 163, 74, 0.18);
   --danger: #dc2626;
   --danger-bg: #fee2e2;
   --warning: #b45309;
-  --shadow-sm: 0 1px 2px rgba(34, 32, 26, 0.06);
-  --shadow-md: 0 8px 24px -8px rgba(34, 32, 26, 0.14);
-  --shadow-lg: 0 16px 40px -12px rgba(34, 32, 26, 0.2);
+  --shadow-sm: 0 1px 2px rgba(10, 22, 40, 0.06);
+  --shadow-md: 0 8px 24px -8px rgba(10, 22, 40, 0.14);
+  --shadow-lg: 0 16px 40px -12px rgba(10, 22, 40, 0.2);
   --radius: 16px;
   --radius-sm: 12px;
   /* The top nav bar stays dark regardless of the rest of the (now light,
@@ -100,7 +100,7 @@ input {
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0;
-  background: linear-gradient(135deg, #22201a, #4a4536);
+  background: linear-gradient(135deg, #0a1628, #1e3a5f);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1000,6 +1000,177 @@ textarea.field-input {
 .picker-subtitle {
   font-size: 13px;
   line-height: 20px;
+}
+
+/* Two-zone layout for the picker step, matching the PIN screen's
+   header/sheet pattern but with a light blue-tinted header instead of
+   navy — the reference has the person grid sitting on a white sheet. */
+.picker-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  animation: fade-up 0.35s ease both;
+}
+
+.picker-header {
+  background: linear-gradient(180deg, #e8f0fc 0%, #f6f7f9 70%);
+  padding: calc(28px + env(safe-area-inset-top)) 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.picker-sheet {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 26px 26px 0 0;
+  margin-top: -16px;
+  padding: 20px 18px calc(28px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
+}
+
+/* Batch setup: dark hero card naming the product being mixed, a white
+   sheet for the batch number + worker chips, and a sticky footer CTA. */
+.setup-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: 88px;
+  animation: fade-up 0.35s ease both;
+}
+
+.setup-hero {
+  background: linear-gradient(141.48deg, #000000 13.68%, #002040 68.82%);
+  padding: calc(28px + env(safe-area-inset-top)) 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup-hero .back-btn {
+  align-self: flex-start;
+  padding-left: 0;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.setup-hero-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px 20px;
+  background: #0d1f3c;
+  border-radius: 22px;
+}
+
+.setup-hero-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.9px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.setup-hero-name {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.setup-sheet {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 26px 26px 0 0;
+  margin-top: -16px;
+  padding: 20px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+.setup-sheet-handle {
+  align-self: center;
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(10, 22, 40, 0.1);
+  margin-bottom: -6px;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.setup-number-input {
+  padding: 13px 16px;
+  border: none;
+  border-radius: 13px;
+  background: rgba(10, 22, 40, 0.04);
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.setup-number-input::placeholder {
+  color: rgba(10, 22, 40, 0.5);
+  font-weight: 800;
+}
+
+.worker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.worker-chip {
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(10, 22, 40, 0.1);
+  background: rgba(10, 22, 40, 0.04);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.worker-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.setup-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 13px 20px calc(13px + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1px solid rgba(10, 22, 40, 0.07);
+}
+
+.setup-footer .btn {
+  width: 100%;
 }
 
 /* "Photo booth" person picker: each card sits at a slight alternating
