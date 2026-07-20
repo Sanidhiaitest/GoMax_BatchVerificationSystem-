@@ -10,9 +10,6 @@ export default function BatchSetup() {
   const [batchNumber, setBatchNumber] = useState('')
   const [selectedNames, setSelectedNames] = useState<string[]>([])
   const [customName, setCustomName] = useState('')
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [starting, setStarting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -67,28 +64,6 @@ export default function BatchSetup() {
     setSelectedNames((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]))
   }
 
-  async function handleStart() {
-    if (!formulationId) return
-    setStarting(true)
-    setError(null)
-    const { data, error } = await supabase.rpc('start_batch', {
-      p_formulation_id: formulationId,
-      p_batch_number: batchNumber.trim(),
-      p_mason_name: masonName.trim(),
-    })
-    setStarting(false)
-    if (error) {
-      setShowConfirm(false)
-      setError(
-        error.message.includes('duplicate_batch_number')
-          ? `Batch number "${batchNumber.trim()}" was already used today. Enter a different number.`
-          : error.message,
-      )
-      return
-    }
-    navigate(`/batch/${data}`, { replace: true })
-  }
-
   const headline = formulation?.base_name ?? formulation?.name ?? formulation?.code ?? ''
 
   return (
@@ -139,38 +114,21 @@ export default function BatchSetup() {
             onChange={(e) => setCustomName(e.target.value)}
           />
         </section>
-
-        {error && <p className="error-text">{error}</p>}
       </div>
 
       <div className="setup-footer">
         <button
           className="btn btn-primary"
           disabled={!canStart}
-          onClick={() => setShowConfirm(true)}
+          onClick={() =>
+            navigate(`/batch/new/${formulationId}/confirm`, {
+              state: { batchNumber: batchNumber.trim(), masonName: masonName.trim() },
+            })
+          }
         >
           Continue →
         </button>
       </div>
-
-      {showConfirm && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <p className="modal-title">Starting now?</p>
-            <p className="modal-body">
-              Batch {batchNumber} with {masonName}. This will log the start time on the server.
-            </p>
-            <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setShowConfirm(false)} disabled={starting}>
-                Cancel
-              </button>
-              <button className="btn btn-primary" onClick={handleStart} disabled={starting}>
-                {starting ? 'Starting…' : 'Yes, start'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

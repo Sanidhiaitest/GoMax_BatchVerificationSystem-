@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import Avatar from '../Avatar'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithFormulation extends Batch {
   formulations: { code: string; name: string | null } | null
+}
+
+function formatElapsed(totalSeconds: number): string {
+  const clamped = Math.max(0, totalSeconds)
+  const mins = Math.floor(clamped / 60)
+  const secs = Math.floor(clamped % 60)
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 export default function BatchChecklist() {
@@ -17,6 +23,7 @@ export default function BatchChecklist() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [sendingForTesting, setSendingForTesting] = useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const navigate = useNavigate()
 
   const load = useCallback(async () => {
@@ -36,6 +43,20 @@ export default function BatchChecklist() {
     load()
   }, [load])
 
+  useEffect(() => {
+    if (!batch) return
+    const start = new Date(batch.started_at).getTime()
+    const end = batch.status === 'submitted' && batch.submitted_at ? new Date(batch.submitted_at).getTime() : null
+    if (end !== null) {
+      setElapsedSeconds((end - start) / 1000)
+      return
+    }
+    const tick = () => setElapsedSeconds((Date.now() - start) / 1000)
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [batch])
+
   if (loading) {
     return (
       <div className="screen center">
@@ -53,13 +74,9 @@ export default function BatchChecklist() {
   }
 
   const readOnly = batch.status === 'submitted'
+  const addedCount = materials.filter((m) => m.status === 'added').length
   const pendingCount = materials.filter((m) => m.status === 'pending').length
-  const durationMinutes =
-    readOnly && batch.submitted_at
-      ? Math.round(
-          ((new Date(batch.submitted_at).getTime() - new Date(batch.started_at).getTime()) / 60000) * 10,
-        ) / 10
-      : null
+  const progressPct = materials.length > 0 ? Math.round((addedCount / materials.length) * 100) : 0
 
   async function handleSubmit() {
     if (!batchId) return
@@ -86,41 +103,60 @@ export default function BatchChecklist() {
   }
 
   return (
-    <div className="screen">
-      <header className="top-bar">
-        <div>
-          <p className="hint-text">
-            {batch.formulations?.code} · Batch {batch.batch_number}
-          </p>
-          <p className="top-bar-title">Mason: {batch.mason_name}</p>
+    <div className="checklist-screen">
+      <div className="checklist-header">
+        <div className="checklist-header-row">
+          <div>
+            <span className="checklist-product-pill">
+              {batch.formulations?.code}
+              {batch.formulations?.name ? ` · ${batch.formulations.name}` : ''}
+            </span>
+            <p className="checklist-batch-sub">Batch #{batch.batch_number}</p>
+          </div>
+          <div className="checklist-timer">
+            <span className="checklist-timer-value">{formatElapsed(elapsedSeconds)}</span>
+            <span className="checklist-timer-label">{readOnly ? 'total time' : 'elapsed'}</span>
+          </div>
         </div>
-        {readOnly && <span className="status-pill status-added">✓ Submitted</span>}
-      </header>
 
-      {readOnly && durationMinutes !== null && (
-        <div className="stat-banner">
-          <span className="stat-banner-value">{durationMinutes} min</span>
-          <span className="stat-banner-label">start to submit</span>
+        <p className="checklist-workers">👷 {batch.mason_name}</p>
+
+        <div className="checklist-progress-row">
+          <span className="checklist-progress-label">
+            {addedCount}/{materials.length} ADDED
+          </span>
+          <span className="checklist-progress-pct">{progressPct}%</span>
         </div>
-      )}
-
-      <div className="list">
-        {materials.map((m) => (
-          <MaterialRow key={m.id} material={m} onChanged={load} readOnly={readOnly} />
-        ))}
+        <div className="checklist-progress-track">
+          <div className="checklist-progress-fill" style={{ width: `${progressPct}%` }} />
+        </div>
       </div>
 
-      {error && <p className="error-text">{error}</p>}
+      <div className="checklist-body">
+        {materials.map((m) => (
+          <MaterialCard key={m.id} material={m} onChanged={load} readOnly={readOnly} />
+        ))}
 
-      {readOnly && <TestingStatusSection batch={batch} onSend={handleSendForTesting} sending={sendingForTesting} />}
+        {error && <p className="error-text">{error}</p>}
+
+        {readOnly && (
+          <TestingStatusSection batch={batch} onSend={handleSendForTesting} sending={sendingForTesting} />
+        )}
+      </div>
 
       {!readOnly && (
-        <div className="submit-bar">
+        <div className="checklist-footer">
           {pendingCount > 0 && (
-            <p className="hint-text">{pendingCount} material(s) not yet marked.</p>
+            <p className="hint-text">
+              {pendingCount} item(s) remaining — all required
+            </p>
           )}
-          <button className="btn btn-primary" onClick={() => setShowSubmitConfirm(true)}>
-            Submit Batch
+          <button
+            className="btn btn-primary"
+            disabled={pendingCount > 0}
+            onClick={() => setShowSubmitConfirm(true)}
+          >
+            {pendingCount > 0 ? 'Complete all items first' : 'Submit Batch'}
           </button>
         </div>
       )}
@@ -129,12 +165,7 @@ export default function BatchChecklist() {
         <div className="modal-backdrop">
           <div className="modal">
             <p className="modal-title">Submit batch?</p>
-            <p className="modal-body">
-              {pendingCount > 0
-                ? `${pendingCount} material(s) are still unmarked. They will be flagged as missing. `
-                : ''}
-              Once submitted this record is locked and cannot be edited.
-            </p>
+            <p className="modal-body">Once submitted this record is locked and cannot be edited.</p>
             <div className="modal-actions">
               <button
                 className="btn btn-ghost"
@@ -165,7 +196,7 @@ function TestingStatusSection({
 }) {
   if (batch.testing_status === 'not_sent') {
     return (
-      <button className="btn btn-ghost" onClick={onSend} disabled={sending}>
+      <button className="btn btn-primary" onClick={onSend} disabled={sending}>
         {sending ? 'Sending…' : '🧪 Send for Testing'}
       </button>
     )
@@ -195,7 +226,7 @@ function TestingStatusSection({
   )
 }
 
-function MaterialRow({
+function MaterialCard({
   material,
   onChanged,
   readOnly,
@@ -230,45 +261,60 @@ function MaterialRow({
     onChanged()
   }
 
+  if (locked) {
+    return (
+      <div className="material-card material-card-locked">
+        <div className="material-card-result">
+          <div className="material-card-head">
+            <span className="material-icon">🧱</span>
+            <div className="material-card-title-group">
+              <span className="material-card-name">{material.description}</span>
+              {material.ticked_at && (
+                <span className="material-card-meta">{new Date(material.ticked_at).toLocaleTimeString()}</span>
+              )}
+            </div>
+          </div>
+          <span className={`status-pill status-${material.status}`}>
+            {material.status === 'added' ? '✓ Added' : material.status === 'skipped' ? '✗ Skipped' : '— Not marked'}
+            {material.suspicious && <span className="suspicious-badge"> ⚠ fast</span>}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={`material-row ${locked ? 'material-row-locked' : ''}`}>
-      <div className="material-row-main">
-        <span className="material-desc-group">
-          <Avatar name={material.description} size={32} />
-          <p className="material-desc">{material.description}</p>
-        </span>
+    <div className="material-card">
+      <div className="material-card-head">
+        <span className="material-icon">🧱</span>
+        <div className="material-card-title-group">
+          <span className="material-card-name">{material.description}</span>
+          <span className="material-card-meta">Required</span>
+        </div>
+      </div>
+
+      <div className="material-card-section">
+        <span className="material-card-label">Quantity (kg)</span>
         <input
-          className="field-input material-qty"
+          className={`material-qty-input-lg ${quantity.trim() ? 'filled' : ''}`}
           inputMode="decimal"
-          placeholder="Qty used"
+          placeholder="Enter kg used"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          disabled={locked || busy}
+          disabled={busy}
         />
       </div>
-      <div className="material-row-actions">
-        {locked ? (
-          <div className="material-row-status">
-            <span className={`status-pill status-${material.status}`}>
-              {material.status === 'added' ? '✓ Added' : material.status === 'skipped' ? '✗ Skipped' : '— Not marked'}
-              {material.suspicious && <span className="suspicious-badge"> ⚠ fast</span>}
-            </span>
-            {material.ticked_at && (
-              <span className="hint-text material-time">{new Date(material.ticked_at).toLocaleTimeString()}</span>
-            )}
-          </div>
-        ) : (
-          <>
-            <button className="icon-btn icon-btn-cross" onClick={() => mark('skipped')} disabled={busy}>
-              ✗
-            </button>
-            <button className="icon-btn icon-btn-check" onClick={() => mark('added')} disabled={busy}>
-              ✓
-            </button>
-          </>
-        )}
+
+      {rowError && <p className="error-text">{rowError}</p>}
+
+      <div className="material-card-actions">
+        <button className="material-skip-btn" onClick={() => mark('skipped')} disabled={busy}>
+          Skip
+        </button>
+        <button className="material-mark-btn" onClick={() => mark('added')} disabled={busy}>
+          {busy ? 'Saving…' : 'Mark as Added'}
+        </button>
       </div>
-      {rowError && <p className="error-text material-error">{rowError}</p>}
     </div>
   )
 }

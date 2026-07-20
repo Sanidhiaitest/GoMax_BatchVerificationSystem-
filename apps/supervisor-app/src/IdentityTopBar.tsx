@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 
 export default function IdentityTopBar({
@@ -13,6 +14,13 @@ export default function IdentityTopBar({
   onLogout: () => void
 }) {
   const [confirmingLogout, setConfirmingLogout] = useState(false)
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    setConfirmingLogout(false)
+    onLogout()
+    navigate('/', { replace: true })
+  }
 
   return (
     <>
@@ -40,7 +48,7 @@ export default function IdentityTopBar({
               <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={onLogout}>
+              <button className="btn btn-primary" onClick={handleLogout}>
                 Log out
               </button>
             </div>

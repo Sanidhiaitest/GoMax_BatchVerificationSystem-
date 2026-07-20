@@ -5,7 +5,10 @@
   --surface-2: #eef2f8;
   --surface-hover: #e3e8f0;
   --text: #0a1628;
-  --text-dim: rgba(10, 22, 40, 0.38);
+  /* 0.6 (not the Figma export's 0.38) — 0.38 measures ~2.2:1 on white,
+     well under WCAG AA's 4.5:1 for body text; 0.6 lands close to 4.8:1
+     while keeping the same "muted navy" hierarchy the designs use. */
+  --text-dim: rgba(10, 22, 40, 0.6);
   --border: rgba(10, 22, 40, 0.1);
   --border-soft: rgba(10, 22, 40, 0.06);
   /* GoMax brand: navy + terracotta-orange, matched to the exact Figma
@@ -326,7 +329,7 @@ textarea.field-input {
 .key-ghost {
   background: transparent;
   border: none;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
   font-size: 20px;
   box-shadow: none;
 }
@@ -380,6 +383,11 @@ textarea.field-input {
   letter-spacing: -0.02em;
 }
 
+.avatar-photo {
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
 .profile-circle {
   background: none;
   border: none;
@@ -424,7 +432,7 @@ textarea.field-input {
   border-radius: 50px;
   border: none;
   background: #ffffff;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
@@ -483,7 +491,7 @@ textarea.field-input {
 
 .recent-batch-time {
   font-size: 10px;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
 }
 
 .recent-batch-name {
@@ -494,7 +502,7 @@ textarea.field-input {
 
 .recent-batch-sub {
   font-size: 11px;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
 }
 
 /* Product list cards: name/type/badges on the left, a colored swatch
@@ -544,7 +552,7 @@ textarea.field-input {
 .product-card-sub {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
 }
 
 .product-card-badges {
@@ -913,32 +921,6 @@ textarea.field-input {
   color: var(--warning);
 }
 
-.submit-bar {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(0deg, var(--bg) 60%, transparent);
-  padding: 16px 0 8px;
-  margin: -8px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.success-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--success-glow), transparent);
-  border: 1px solid var(--success-strong);
-  color: var(--success-strong);
-  font-size: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 8px var(--success-glow);
-  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
 @keyframes pop-in {
   from {
     opacity: 0;
@@ -948,6 +930,501 @@ textarea.field-input {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Batch checklist: dark timer header (elapsed time, workers, progress),
+   white material cards below, sticky submit footer. */
+.checklist-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: 100px;
+  animation: fade-up 0.35s ease both;
+}
+
+.checklist-header {
+  background: linear-gradient(141.48deg, #000000 13.68%, #002040 68.82%);
+  padding: calc(26px + env(safe-area-inset-top)) 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.checklist-product-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(193, 68, 14, 0.14);
+  border: 1px solid rgba(193, 68, 14, 0.3);
+  border-radius: 8px;
+  color: #ff9d6e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.checklist-batch-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 4px 0 0;
+}
+
+.checklist-timer {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.checklist-timer-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  display: block;
+}
+
+.checklist-timer-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.checklist-workers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.checklist-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.checklist-progress-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.checklist-progress-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ff9d6e;
+}
+
+.checklist-progress-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.checklist-progress-fill {
+  height: 3px;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.checklist-body {
+  padding: 12px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.material-card {
+  background: #ffffff;
+  border: 1.5px solid rgba(10, 22, 40, 0.07);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.material-card-locked {
+  opacity: 0.85;
+}
+
+.material-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.material-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: rgba(193, 68, 14, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.material-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.material-card-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+
+.material-card-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.material-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.material-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.material-qty-input-lg {
+  padding: 11px 14px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: rgba(10, 22, 40, 0.04);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 800;
+  width: 100%;
+}
+
+.material-qty-input-lg.filled {
+  border-color: var(--accent);
+}
+
+.material-qty-input-lg::placeholder {
+  color: rgba(10, 22, 40, 0.55);
+  font-weight: 800;
+}
+
+.material-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.material-mark-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 13px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 3px 12px rgba(193, 68, 14, 0.27);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.material-mark-btn:active {
+  filter: brightness(0.95);
+  transform: scale(0.98);
+}
+
+.material-mark-btn:disabled {
+  background: #c4c9d4;
+  box-shadow: none;
+  color: #fff;
+}
+
+.material-skip-btn {
+  padding: 13px 16px;
+  border-radius: 13px;
+  border: 1.5px solid rgba(10, 22, 40, 0.1);
+  background: transparent;
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.material-card-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.checklist-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 10px 18px calc(14px + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1px solid rgba(10, 22, 40, 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-footer .hint-text {
+  text-align: center;
+}
+
+.checklist-footer .btn {
+  width: 100%;
+}
+
+/* "Ready to start" confirmation between setup and the live checklist */
+.confirm-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(24px + env(safe-area-inset-top)) 18px calc(100px + env(safe-area-inset-bottom));
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  animation: fade-up 0.35s ease both;
+}
+
+.confirm-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 26px;
+  background: rgba(193, 68, 14, 0.07);
+  border: 1.5px solid rgba(193, 68, 14, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 28px 0 18px;
+}
+
+.confirm-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.9px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.confirm-number {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  color: var(--text);
+  margin: 6px 0 16px;
+}
+
+.confirm-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: rgba(193, 68, 14, 0.07);
+  border: 1px solid rgba(193, 68, 14, 0.2);
+  border-radius: 50px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.confirm-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid rgba(10, 22, 40, 0.08);
+  border-radius: 22px;
+  padding: 16px 18px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.confirm-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.9px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.confirm-workers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.confirm-worker-chip {
+  padding: 6px 13px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.confirm-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: rgba(193, 68, 14, 0.07);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 500;
+  width: 100%;
+}
+
+.confirm-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 18px calc(24px + env(safe-area-inset-bottom));
+}
+
+.confirm-footer .btn {
+  width: 100%;
+}
+
+/* Submitted / success screen — the one other deliberately dark screen,
+   celebrating a completed batch. */
+.submitted-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 22px calc(32px + env(safe-area-inset-bottom));
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  background: linear-gradient(141.48deg, #000000 13.68%, #002040 68.82%);
+  min-height: 100svh;
+  animation: fade-up 0.35s ease both;
+}
+
+.submitted-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 44px;
+  background: rgba(22, 163, 74, 0.14);
+  border: 1.5px solid rgba(22, 163, 74, 0.35);
+  color: var(--success);
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.submitted-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.submitted-subtitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--success);
+  margin: 0 0 24px;
+}
+
+.submitted-card {
+  width: 100%;
+  background: #0d1f3c;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 18px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.submitted-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.9px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 14px;
+}
+
+.submitted-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.submitted-row-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.submitted-row-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: right;
+}
+
+.submitted-row-value-accent {
+  color: #ff9d6e;
+  font-size: 24px;
+}
+
+.submitted-row-value-success {
+  color: var(--success);
+}
+
+.submitted-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0;
+}
+
+.submitted-screen .btn {
+  width: 100%;
 }
 
 /* GoMax wordmark */
@@ -1294,7 +1771,7 @@ textarea.field-input {
 
 .pin-sheet .hint-text {
   font-size: 13px;
-  color: rgba(10, 22, 40, 0.38);
+  color: var(--text-dim);
 }
 
 .pin-sheet-handle {

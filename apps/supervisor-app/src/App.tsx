@@ -3,6 +3,7 @@ import { SupervisorProvider, useSupervisor } from './SupervisorContext'
 import Login from './pages/Login'
 import FormulationSelect from './pages/FormulationSelect'
 import BatchSetup from './pages/BatchSetup'
+import BatchConfirm from './pages/BatchConfirm'
 import BatchChecklist from './pages/BatchChecklist'
 import Submitted from './pages/Submitted'
 import History from './pages/History'
@@ -52,6 +53,14 @@ export default function App() {
             element={
               <RequireSupervisor>
                 <BatchSetup />
+              </RequireSupervisor>
+            }
+          />
+          <Route
+            path="/batch/new/:formulationId/confirm"
+            element={
+              <RequireSupervisor>
+                <BatchConfirm />
               </RequireSupervisor>
             }
           />

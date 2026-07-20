@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 import { GoMaxWordmark } from './GoMaxLogo'
 
@@ -18,6 +19,13 @@ export default function AppHeader({
   onLogout: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    setMenuOpen(false)
+    onLogout()
+    navigate('/', { replace: true })
+  }
 
   return (
     <>
@@ -42,7 +50,7 @@ export default function AppHeader({
               >
                 {historyLabel}
               </button>
-              <button className="btn btn-primary" onClick={onLogout}>
+              <button className="btn btn-primary" onClick={handleLogout}>
                 Log out
               </button>
               <button className="link-btn" onClick={() => setMenuOpen(false)}>

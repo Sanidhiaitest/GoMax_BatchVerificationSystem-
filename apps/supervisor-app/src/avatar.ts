@@ -30,3 +30,9 @@ export function initials(name: string): string {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
+
+// e.g. "Ravi Sharma" -> "ravi-sharma" — matches the filename Avatar looks
+// for under public/avatars/.
+export function avatarSlug(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-')
+}
