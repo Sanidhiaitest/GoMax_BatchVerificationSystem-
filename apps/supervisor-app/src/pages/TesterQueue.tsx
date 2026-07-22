@@ -32,6 +32,7 @@ export default function TesterQueue() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [supervisorFilter, setSupervisorFilter] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'in_progress' | null>(null)
   const navigate = useNavigate()
 
   const firstName = supervisor?.name.split(' ')[0] ?? ''
@@ -67,7 +68,9 @@ export default function TesterQueue() {
   const inProgressCount = rows.filter((r) => r.testing_status === 'in_progress').length
 
   const supervisorNames = Array.from(new Set(rows.map((r) => r.supervisors?.name).filter((n): n is string => Boolean(n))))
-  const visibleRows = supervisorFilter ? rows.filter((r) => r.supervisors?.name === supervisorFilter) : rows
+  const visibleRows = rows
+    .filter((r) => !supervisorFilter || r.supervisors?.name === supervisorFilter)
+    .filter((r) => !statusFilter || r.testing_status === statusFilter)
 
   return (
     <div className="screen">
@@ -81,18 +84,26 @@ export default function TesterQueue() {
       </div>
 
       <div className="tester-stats">
-        <div className="tester-stat">
+        <button
+          type="button"
+          className={`tester-stat tester-stat-orange ${statusFilter === 'pending' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((f) => (f === 'pending' ? null : 'pending'))}
+        >
           <span className="tester-stat-value">{pendingCount}</span>
           <span className="tester-stat-label">Waiting</span>
-        </div>
-        <div className="tester-stat">
+        </button>
+        <button
+          type="button"
+          className={`tester-stat tester-stat-yellow ${statusFilter === 'in_progress' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((f) => (f === 'in_progress' ? null : 'in_progress'))}
+        >
           <span className="tester-stat-value">{inProgressCount}</span>
           <span className="tester-stat-label">In progress</span>
-        </div>
-        <div className="tester-stat">
+        </button>
+        <button type="button" className="tester-stat tester-stat-green" onClick={() => navigate('/testing/history')}>
           <span className="tester-stat-value">{completedCount}</span>
           <span className="tester-stat-label">Completed</span>
-        </div>
+        </button>
       </div>
 
       <div className="list-section-head">
@@ -134,7 +145,7 @@ export default function TesterQueue() {
         </div>
       )}
       {!loading && rows.length > 0 && visibleRows.length === 0 && (
-        <p className="hint-text">No batches from {supervisorFilter} right now.</p>
+        <p className="hint-text">Nothing matches that filter right now.</p>
       )}
 
       <div className="list">

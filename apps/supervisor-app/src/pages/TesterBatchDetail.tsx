@@ -9,6 +9,9 @@ interface BatchWithRelations extends Batch {
   supervisors: { name: string } | null
 }
 
+const clock = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+
 export default function TesterBatchDetail() {
   const { batchId } = useParams<{ batchId: string }>()
   const { supervisor } = useSupervisor()
@@ -109,7 +112,10 @@ export default function TesterBatchDetail() {
         )}
 
         {batch.testing_status === 'in_progress' && batch.testing_started_at && (
-          <CompleteTestingForm batchId={batch.id} onDone={load} />
+          <>
+            <p className="hint-text">Started testing at {clock(batch.testing_started_at)}</p>
+            <CompleteTestingForm batchId={batch.id} onDone={load} />
+          </>
         )}
 
         {done && (
@@ -157,6 +163,11 @@ function TestResult({ batch, testerName }: { batch: BatchWithRelations; testerNa
       )}
 
       {batch.test_remarks && <p className="result-remarks">"{batch.test_remarks}"</p>}
+
+      <div className="tester-timestamps">
+        <span>Started {clock(batch.testing_started_at)}</span>
+        <span>Finished {clock(batch.testing_completed_at)}</span>
+      </div>
     </section>
   )
 }
@@ -260,9 +271,8 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
         />
+        <AudioRecorder onRecorded={setAudioBlob} />
       </section>
-
-      <AudioRecorder onRecorded={setAudioBlob} />
 
       <section className="setup-section">
         <h2 className="setup-section-title">Result</h2>
@@ -336,16 +346,16 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob | null) => void
   }
 
   return (
-    <section className="setup-section">
-      <h2 className="setup-section-title">Voice note</h2>
+    <div className="remarks-audio-row">
       {recordError && <p className="error-text">{recordError}</p>}
       {!audioUrl && (
         <button
           type="button"
-          className={`btn ${recording ? 'btn-primary' : 'btn-ghost'}`}
+          className={`remarks-audio-btn ${recording ? 'recording' : ''}`}
           onClick={recording ? stop : start}
         >
-          {recording ? '⏹ Stop recording' : '🎙 Record voice note (optional)'}
+          {recording ? '⏹' : '🎙'}
+          <span>{recording ? 'Stop recording' : 'Add voice note'}</span>
         </button>
       )}
       {audioUrl && (
@@ -356,6 +366,6 @@ function AudioRecorder({ onRecorded }: { onRecorded: (blob: Blob | null) => void
           </button>
         </div>
       )}
-    </section>
+    </div>
   )
 }

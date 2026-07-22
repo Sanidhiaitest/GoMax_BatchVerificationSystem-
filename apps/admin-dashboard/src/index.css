@@ -195,6 +195,46 @@ a {
   gap: 10px;
 }
 
+/* GoMax wordmark — shared lockup with the supervisor app */
+.gomax-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gomax-badge {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(193, 68, 14, 0.27);
+}
+
+.gomax-wordmark-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gomax-wordmark-title {
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 16px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.gomax-wordmark-subtitle {
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
 .app-content-column {
   display: flex;
   flex-direction: column;

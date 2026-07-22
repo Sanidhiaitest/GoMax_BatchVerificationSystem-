@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { useAuth } from '../AuthContext'
 import type { BatchListRow } from '../types'
 
 // A batch row with the extra timestamps the overview needs to describe
@@ -24,6 +25,7 @@ function timeAgo(iso: string | null): string {
 const today = () => new Date().toISOString().slice(0, 10)
 
 export default function Overview() {
+  const { adminName } = useAuth()
   const [batches, setBatches] = useState<OverviewBatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +78,10 @@ export default function Overview() {
   return (
     <div className="page">
       <div>
-        <h1 className="page-title">{greeting} 👋</h1>
+        <h1 className="page-title">
+          {greeting}
+          {adminName ? ` ${adminName}` : ''} 👋
+        </h1>
         <p className="hint-text">
           {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · live factory snapshot
         </p>

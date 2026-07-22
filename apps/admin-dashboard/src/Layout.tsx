@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import { GoMaxWordmark } from './GoMaxLogo'
 
 export default function Layout() {
-  const { adminName, signOut } = useAuth()
+  const { signOut } = useAuth()
 
   return (
     <div className="app-shell">
@@ -36,9 +37,8 @@ export default function Layout() {
 
       <div className="app-content-column">
         <header className="app-header">
-          <span className="app-header-title">GoMax QC</span>
+          <GoMaxWordmark subtitle="Batch QC" />
           <div className="app-header-user">
-            <span className="hint-text">{adminName}</span>
             <button className="link-btn" onClick={signOut}>
               Sign out
             </button>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { GoMaxWordmark } from '../GoMaxLogo'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -26,6 +27,9 @@ export default function Login() {
 
   return (
     <div className="screen center">
+      <div style={{ marginBottom: 16 }}>
+        <GoMaxWordmark subtitle="Admin" />
+      </div>
       <h1 className="title">GoMax QC Admin</h1>
       <p className="subtitle">Sign in to review batches</p>
 

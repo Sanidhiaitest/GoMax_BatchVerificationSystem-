@@ -1928,9 +1928,14 @@ textarea.field-input {
   gap: 2px;
   padding: 12px 8px;
   background: #ffffff;
-  border: 1px solid rgba(10, 22, 40, 0.08);
+  border: 1.5px solid rgba(10, 22, 40, 0.08);
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.1s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.tester-stat:active {
+  transform: scale(0.97);
 }
 
 .tester-stat-value {
@@ -1946,6 +1951,28 @@ textarea.field-input {
   letter-spacing: 0.03em;
   color: var(--text-dim);
   text-transform: uppercase;
+}
+
+.tester-stat-orange.active {
+  background: rgba(193, 68, 14, 0.08);
+  border-color: var(--accent);
+}
+
+.tester-stat-orange.active .tester-stat-value {
+  color: var(--accent-strong);
+}
+
+.tester-stat-yellow.active {
+  background: rgba(202, 138, 4, 0.1);
+  border-color: #ca8a04;
+}
+
+.tester-stat-yellow.active .tester-stat-value {
+  color: #a16207;
+}
+
+.tester-stat-green .tester-stat-value {
+  color: var(--success-strong);
 }
 
 /* Empty state (queue cleared) */
@@ -2071,8 +2098,8 @@ textarea.field-input {
 }
 
 .queue-card-status.in-progress {
-  background: rgba(180, 83, 9, 0.12);
-  color: var(--warning);
+  background: rgba(202, 138, 4, 0.14);
+  color: #a16207;
 }
 
 /* Detail: dark hero + white sheet */
@@ -2258,13 +2285,13 @@ textarea.field-input {
   flex: 1;
   padding: 14px;
   border-radius: 12px;
-  border: none;
-  background: transparent;
+  border: 1.5px solid rgba(10, 22, 40, 0.1);
+  background: #ffffff;
   color: var(--text-dim);
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  transition: transform 0.1s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.1s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .result-tab:active {
@@ -2277,14 +2304,49 @@ textarea.field-input {
 
 .result-tab-pass.active {
   background: var(--success);
+  border-color: var(--success-strong);
   color: #fff;
   box-shadow: 0 3px 12px rgba(22, 163, 74, 0.27);
 }
 
 .result-tab-fail.active {
   background: var(--danger);
+  border-color: var(--danger);
   color: #fff;
   box-shadow: 0 3px 12px rgba(220, 38, 38, 0.27);
+}
+
+/* Voice note, merged inline under the Remarks textarea instead of its own
+   separate section */
+.remarks-audio-row {
+  margin-top: 4px;
+}
+
+.remarks-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 50px;
+  border: 1.5px solid rgba(10, 22, 40, 0.1);
+  background: rgba(10, 22, 40, 0.03);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.remarks-audio-btn.recording {
+  background: var(--danger-bg);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: var(--danger);
+}
+
+.tester-timestamps {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
 }
 
 /* Result banner + evidence (completed test) */

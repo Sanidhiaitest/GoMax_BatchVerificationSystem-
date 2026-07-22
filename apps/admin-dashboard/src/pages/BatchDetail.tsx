@@ -293,8 +293,6 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
     failed: '✗ Failed',
   }
 
-  const done = batch.testing_status === 'passed' || batch.testing_status === 'failed'
-
   return (
     <section>
       <h2 className="section-title">Lab testing</h2>
@@ -307,7 +305,7 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
           >
             {resultLabel[batch.testing_status]}
           </span>
-          {batch.tester && <span className="hint-text">Tester: {batch.tester.name}</span>}
+          {batch.tester && <span className="hint-text">Tested by {batch.tester.name}</span>}
         </div>
 
         {photoUrl && (
@@ -325,7 +323,7 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
           </div>
         )}
 
-        {done && (
+        {(batch.testing_started_at || batch.testing_completed_at) && (
           <div className="timeline timeline-compact">
             <TimelineItem label="Sent" value={clock(batch.sent_for_testing_at)} />
             <TimelineItem label="Started" value={clock(batch.testing_started_at)} />
