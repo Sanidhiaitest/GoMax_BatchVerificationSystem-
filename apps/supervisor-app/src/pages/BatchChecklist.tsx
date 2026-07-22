@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { materialIcon } from '../materialIcon'
+import { GoMaxBadge } from '../GoMaxLogo'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithFormulation extends Batch {
@@ -108,6 +109,9 @@ export default function BatchChecklist() {
       <div className="checklist-header">
         <div className="checklist-header-row">
           <div className="checklist-header-id">
+            <div style={{ marginBottom: 6 }}>
+              <GoMaxBadge size={26} />
+            </div>
             <span className="checklist-header-label">{batch.formulations?.code}</span>
             <span className="checklist-header-name">{batch.formulations?.name ?? batch.formulations?.code}</span>
             <span className="checklist-header-meta">

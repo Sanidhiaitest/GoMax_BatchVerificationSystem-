@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { GoMaxBadge } from '../GoMaxLogo'
 import type { Formulation } from '../types'
 
 interface ConfirmState {
@@ -69,9 +70,12 @@ export default function BatchConfirm() {
 
   return (
     <div className="confirm-screen">
-      <button className="link-btn back-btn" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
+      <div className="screen-top-row">
+        <button className="link-btn back-btn" onClick={() => navigate(-1)}>
+          ← Back
+        </button>
+        <GoMaxBadge size={30} />
+      </div>
 
       <div className="confirm-icon">🔍</div>
       <span className="confirm-label">Ready to start</span>

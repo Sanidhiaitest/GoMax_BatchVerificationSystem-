@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { GoMaxBadge } from '../GoMaxLogo'
 
 interface HistoryRow {
   id: string
@@ -58,9 +59,12 @@ export default function History() {
 
   return (
     <div className="screen">
-      <button className="link-btn back-btn" onClick={() => navigate('/formulation')}>
-        ← Back
-      </button>
+      <div className="screen-top-row">
+        <button className="link-btn back-btn" onClick={() => navigate('/formulation')}>
+          ← Back
+        </button>
+        <GoMaxBadge size={28} />
+      </div>
 
       <div className="greeting">
         <h1 className="title picker-title">Your batches</h1>

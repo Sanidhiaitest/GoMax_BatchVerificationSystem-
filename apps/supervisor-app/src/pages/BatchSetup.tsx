@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { GoMaxBadge } from '../GoMaxLogo'
 import type { Formulation } from '../types'
 
 export default function BatchSetup() {
@@ -69,9 +70,12 @@ export default function BatchSetup() {
   return (
     <div className="setup-screen">
       <div className="setup-hero">
-        <button className="link-btn back-btn" onClick={() => navigate(-1)}>
-          ← Change Product
-        </button>
+        <div className="screen-top-row">
+          <button className="link-btn back-btn" onClick={() => navigate(-1)}>
+            ← Change Product
+          </button>
+          <GoMaxBadge size={28} />
+        </div>
         <div className="setup-hero-card">
           {formulation?.category && <span className="setup-hero-label">{formulation.category}</span>}
           <span className="setup-hero-name">{headline}</span>

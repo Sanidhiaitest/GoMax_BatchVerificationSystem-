@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { GoMaxBadge } from '../GoMaxLogo'
 import type { Batch } from '../types'
 
 interface SubmittedBatch extends Batch {
@@ -61,6 +62,7 @@ export default function Submitted() {
 
   return (
     <div className="submitted-screen">
+      <GoMaxBadge size={30} />
       <div className="submitted-icon">✓</div>
       <h1 className="submitted-title">Ho Gaya! 🎉</h1>
       <p className="submitted-subtitle">

@@ -281,6 +281,19 @@ textarea.field-input {
   padding-left: 4px;
 }
 
+/* Back button + GoMax badge sharing a row, used on screens that don't
+   have the full AppHeader (confirm/setup/checklist/history/tester
+   screens) so the logo still shows up everywhere. */
+.screen-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.screen-top-row .back-btn {
+  align-self: center;
+}
+
 /* PIN pad */
 .pin-dots {
   display: flex;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useSupervisor } from '../SupervisorContext'
+import { GoMaxBadge } from '../GoMaxLogo'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithRelations extends Batch {
@@ -74,9 +75,12 @@ export default function TesterBatchDetail() {
   return (
     <div className="tester-screen">
       <div className="tester-hero">
-        <button className="link-btn back-btn" onClick={() => navigate('/testing')}>
-          ← Back to queue
-        </button>
+        <div className="screen-top-row">
+          <button className="link-btn back-btn" onClick={() => navigate('/testing')}>
+            ← Back to queue
+          </button>
+          <GoMaxBadge size={28} />
+        </div>
         <div className="tester-hero-body">
           <span className="tester-hero-number">#{batch.batch_number}</span>
           <span className="tester-hero-name">{product}</span>
