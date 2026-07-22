@@ -24,18 +24,22 @@ function loadManifest(): Promise<string[]> {
   return manifestPromise
 }
 
-// Tries candidates from most to least specific (full name before bare
-// code) so a short code like "P10" can't accidentally grab the photo for
-// an unrelated "P100" product just because "p10" is a substring of
-// "p100" — a longer, more descriptive candidate is far less likely to
-// collide with the wrong file, so it's tried first and, once anything at
-// that specificity level matches, shorter/vaguer candidates are never
-// consulted.
+// Tries candidates in fixed priority order — code first, then
+// base_name+variant, then base_name, then name — NOT sorted by raw
+// string length. The code is the authoritative unique identifier, so it
+// must be tried before base_name even though base_name is often the
+// longer string: two formulations can share the same base_name (e.g.
+// "Pure Set IS 100" and "Pure Set P40" are both "Pure Set"), and if
+// base_name were tried first it could match the wrong sibling's photo
+// just because that sibling's filename happens to be closer in length.
+// Within a single candidate, if multiple files still match (substring
+// containment either direction), the closest length match wins, which is
+// also what correctly disambiguates a short code like "P10" from an
+// unrelated "P100" product — "puretilep10" is closer in length to "p10"
+// than "pureflexp100" is.
 function findBestMatch(files: string[], candidates: string[]): string | null {
   const stems = files.map((file) => ({ file, stem: normalize(file.replace(/\.[^.]+$/, '')) }))
-  const normalizedCandidates = Array.from(new Set(candidates.map(normalize).filter((c) => c.length >= 3))).sort(
-    (a, b) => b.length - a.length,
-  )
+  const normalizedCandidates = Array.from(new Set(candidates.map(normalize).filter((c) => c.length >= 3)))
 
   for (const candidate of normalizedCandidates) {
     let best: { file: string; diff: number } | null = null
@@ -69,9 +73,9 @@ export default function ProductImage({
     let cancelled = false
     const candidates = [
       formulation.code,
+      formulation.base_name && formulation.variant ? `${formulation.base_name} ${formulation.variant}` : null,
       formulation.base_name,
       formulation.name,
-      formulation.base_name && formulation.variant ? `${formulation.base_name} ${formulation.variant}` : null,
     ].filter((v): v is string => Boolean(v))
 
     loadManifest().then((files) => {
