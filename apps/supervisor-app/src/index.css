@@ -807,7 +807,14 @@ textarea.field-input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: env(safe-area-inset-top);
+  padding: env(safe-area-inset-top) 0 10px;
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background: var(--bg);
+  margin: 0 -18px;
+  padding-left: 18px;
+  padding-right: 18px;
 }
 
 .app-header-account {
@@ -1905,6 +1912,29 @@ textarea.field-input {
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+.queue-card-main-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+}
+
+.queue-card-send-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(193, 68, 14, 0.3);
+}
+
+.queue-card-send-btn:disabled {
+  opacity: 0.6;
 }
 
 .queue-card-top {

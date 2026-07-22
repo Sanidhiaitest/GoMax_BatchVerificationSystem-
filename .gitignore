@@ -8,3 +8,4 @@ dist-ssr
 .DS_Store
 *.log
 .vercel
+apps/supervisor-app/public/products/manifest.json

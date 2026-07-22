@@ -17,27 +17,35 @@ export default function History() {
   const [batches, setBatches] = useState<HistoryRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sendingId, setSendingId] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  async function load() {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('batches')
+      .select(
+        'id, batch_number, batch_date, status, started_at, submitted_at, testing_status, formulations(code, name, base_name)',
+      )
+      .order('started_at', { ascending: false })
+      .limit(100)
+    if (error) setError(error.message)
+    else setBatches((data as unknown as HistoryRow[]) ?? [])
+    setLoading(false)
+  }
+
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const { data, error } = await supabase
-        .from('batches')
-        .select(
-          'id, batch_number, batch_date, status, started_at, submitted_at, testing_status, formulations(code, name, base_name)',
-        )
-        .order('started_at', { ascending: false })
-        .limit(100)
-      if (cancelled) return
-      if (error) setError(error.message)
-      else setBatches((data as unknown as HistoryRow[]) ?? [])
-      setLoading(false)
-    })()
-    return () => {
-      cancelled = true
-    }
+    load()
   }, [])
+
+  async function sendForTesting(id: string) {
+    setSendingId(id)
+    setError(null)
+    const { error } = await supabase.rpc('send_batch_for_testing', { p_batch_id: id })
+    setSendingId(null)
+    if (error) setError(error.message)
+    else load()
+  }
 
   function statusPill(b: HistoryRow) {
     if (b.status === 'in_progress') return { label: 'In progress', cls: 'queue-card-status in-progress' }
@@ -69,18 +77,29 @@ export default function History() {
         {batches.map((b) => {
           const product = b.formulations?.base_name ?? b.formulations?.name ?? b.formulations?.code
           const pill = statusPill(b)
+          const needsTesting = b.status === 'submitted' && b.testing_status === 'not_sent'
           return (
-            <button key={b.id} className="queue-card" onClick={() => navigate(`/batch/${b.id}`)}>
-              <span className="queue-card-main">
+            <div key={b.id} className="queue-card">
+              <button className="queue-card-main queue-card-main-btn" onClick={() => navigate(`/batch/${b.id}`)}>
                 <span className="queue-card-top">
                   <span className="queue-card-number">#{b.batch_number}</span>
                   <span className="queue-card-time">{b.batch_date}</span>
                 </span>
                 <span className="queue-card-name">{product}</span>
                 <span className="queue-card-sub">{b.formulations?.code}</span>
-              </span>
-              <span className={pill.cls}>{pill.label}</span>
-            </button>
+              </button>
+              {needsTesting ? (
+                <button
+                  className="queue-card-send-btn"
+                  onClick={() => sendForTesting(b.id)}
+                  disabled={sendingId === b.id}
+                >
+                  {sendingId === b.id ? '…' : '🧪 Send'}
+                </button>
+              ) : (
+                <span className={pill.cls}>{pill.label}</span>
+              )}
+            </div>
           )
         })}
       </div>
