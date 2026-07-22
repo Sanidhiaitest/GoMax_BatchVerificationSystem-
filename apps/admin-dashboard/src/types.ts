@@ -66,5 +66,6 @@ export interface BatchListRow {
   testing_status: TestingStatus
   formulations: { code: string; name: string | null } | null
   supervisors: { name: string } | null
+  tester: { name: string } | null
   batch_flags: { id: string; severity: FlagSeverity }[]
 }
