@@ -53,6 +53,7 @@ export default function BatchList() {
   const [supervisorFilter, setSupervisorFilter] = useState('')
   const [formulationFilter, setFormulationFilter] = useState('')
   const [testerFilter, setTesterFilter] = useState('')
+  const [workerFilter, setWorkerFilter] = useState('')
 
   const mixers = useMemo(() => supervisors.filter((s) => s.role === 'supervisor'), [supervisors])
   const testers = useMemo(() => supervisors.filter((s) => s.role === 'tester'), [supervisors])
@@ -103,9 +104,34 @@ export default function BatchList() {
     }
   }, [dateFilter, supervisorFilter, formulationFilter, testerFilter])
 
+  // On-floor workers (batch.mason_name) are a free-text, comma-separated
+  // field — distinct from the supervisor who logged the batch in — so they
+  // need their own filter, built from whoever actually shows up in the data.
+  const workerOptions = useMemo(() => {
+    const names = new Set<string>()
+    batches.forEach((b) =>
+      b.mason_name
+        .split(',')
+        .map((n) => n.trim())
+        .filter(Boolean)
+        .forEach((n) => names.add(n)),
+    )
+    return Array.from(names).sort()
+  }, [batches])
+
   const visible = useMemo(
-    () => batches.filter((b) => matchesStatus(b, statusChip)),
-    [batches, statusChip],
+    () =>
+      batches
+        .filter((b) => matchesStatus(b, statusChip))
+        .filter(
+          (b) =>
+            !workerFilter ||
+            b.mason_name
+              .split(',')
+              .map((n) => n.trim().toLowerCase())
+              .includes(workerFilter.toLowerCase()),
+        ),
+    [batches, statusChip, workerFilter],
   )
 
   return (
@@ -137,7 +163,7 @@ export default function BatchList() {
           />
         </label>
         <label className="field">
-          <span className="field-label">Supervisor</span>
+          <span className="field-label">Logged in by</span>
           <select
             className="field-input"
             value={supervisorFilter}
@@ -147,6 +173,17 @@ export default function BatchList() {
             {mixers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span className="field-label">Worker</span>
+          <select className="field-input" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
+            <option value="">All</option>
+            {workerOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </select>
@@ -179,7 +216,7 @@ export default function BatchList() {
             </select>
           </label>
         )}
-        {(dateFilter || supervisorFilter || formulationFilter || testerFilter) && (
+        {(dateFilter || supervisorFilter || formulationFilter || testerFilter || workerFilter) && (
           <button
             className="link-btn"
             onClick={() => {
@@ -187,6 +224,7 @@ export default function BatchList() {
               setSupervisorFilter('')
               setFormulationFilter('')
               setTesterFilter('')
+              setWorkerFilter('')
             }}
           >
             Clear filters
@@ -236,7 +274,7 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
             {batch.formulations?.code} · #{batch.batch_number}
           </span>
           <span className="list-item-sub">
-            {batch.supervisors?.name} · {batch.batch_date}
+            {batch.supervisors?.name} · {batch.mason_name} · {batch.batch_date}
             {batch.status === 'in_progress' && ' · in progress'}
           </span>
         </div>

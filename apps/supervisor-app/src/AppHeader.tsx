@@ -5,8 +5,8 @@ import { GoMaxWordmark } from './GoMaxLogo'
 
 // Light header used on the light-theme screens (formulation picker, etc.) —
 // the compact badge/wordmark lockup on the left, a small avatar button on
-// the right that opens history + logout, since there's no room here for a
-// full identity bar like the dark top-bar screens use.
+// the right that opens an account sheet (history + logout), since there's
+// no room here for a full identity bar like the dark top-bar screens use.
 export default function AppHeader({
   name,
   historyLabel,
@@ -19,10 +19,16 @@ export default function AppHeader({
   onLogout: () => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
   const navigate = useNavigate()
 
-  function handleLogout() {
+  function closeAll() {
     setMenuOpen(false)
+    setConfirmingLogout(false)
+  }
+
+  function handleLogout() {
+    closeAll()
     onLogout()
     navigate('/', { replace: true })
   }
@@ -36,25 +42,44 @@ export default function AppHeader({
         </button>
       </header>
 
-      {menuOpen && (
-        <div className="modal-backdrop" onClick={() => setMenuOpen(false)}>
+      {menuOpen && !confirmingLogout && (
+        <div className="modal-backdrop" onClick={closeAll}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <p className="modal-title">{name}</p>
-            <div className="modal-actions modal-actions-column">
+            <div className="account-sheet-actions">
               <button
-                className="btn btn-ghost"
+                className="account-sheet-row"
                 onClick={() => {
-                  setMenuOpen(false)
+                  closeAll()
                   onHistory()
                 }}
               >
+                <span>🕐</span>
                 {historyLabel}
               </button>
-              <button className="btn btn-primary" onClick={handleLogout}>
+              <button className="account-sheet-row account-sheet-row-danger" onClick={() => setConfirmingLogout(true)}>
+                <span>🚪</span>
                 Log out
               </button>
-              <button className="link-btn" onClick={() => setMenuOpen(false)}>
+            </div>
+            <button className="link-btn" onClick={closeAll}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {menuOpen && confirmingLogout && (
+        <div className="modal-backdrop" onClick={closeAll}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <p className="modal-title">Log out?</p>
+            <p className="modal-body">You'll need your PIN to sign in again.</p>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
                 Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleLogout}>
+                Log out
               </button>
             </div>
           </div>
