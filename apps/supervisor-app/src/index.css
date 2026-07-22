@@ -800,6 +800,62 @@ textarea.field-input {
   flex: 1;
 }
 
+/* Small centered confirm popup (logout) — deliberately NOT the bottom
+   sheet .modal pattern above: no backdrop-filter blur (the suspected
+   cause of the "blurry screen" bug on some mobile browsers), always
+   centered and fully visible without scrolling, regardless of where the
+   page was scrolled to when it opened. */
+.confirm-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 16, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 24px;
+  animation: backdrop-in 0.15s ease both;
+}
+
+.confirm-popup {
+  width: 100%;
+  max-width: 300px;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 26px 22px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: popup-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popup-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.confirm-popup-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+}
+
+.confirm-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirm-popup-actions .btn {
+  width: 100%;
+}
+
 /* Light header (badge/wordmark + History link + Logout) used on
    light-theme screens, as opposed to the dark full-bleed .top-bar used
    elsewhere. */

@@ -40,16 +40,15 @@ export default function AppHeader({
       </header>
 
       {confirmingLogout && (
-        <div className="modal-backdrop" onClick={() => setConfirmingLogout(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <p className="modal-title">Log out?</p>
-            <p className="modal-body">You'll need your PIN to sign in again.</p>
-            <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
-                Cancel
-              </button>
+        <div className="confirm-popup-backdrop" onClick={() => setConfirmingLogout(false)}>
+          <div className="confirm-popup" onClick={(e) => e.stopPropagation()}>
+            <p className="confirm-popup-title">Are you sure you want to logout?</p>
+            <div className="confirm-popup-actions">
               <button className="btn btn-danger" onClick={handleLogout}>
-                Log out
+                Logout
+              </button>
+              <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
+                No
               </button>
             </div>
           </div>
