@@ -797,46 +797,29 @@ textarea.field-input {
   flex: 1;
 }
 
-/* Account sheet — the menu that opens from the header avatar, offering
-   History and a clearly-separated, danger-tinted Log out row (which then
-   opens its own confirm step, so logging out always takes two taps). */
-.account-sheet-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.account-sheet-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: left;
-}
-
-.account-sheet-row:active {
-  background: var(--surface-hover);
-}
-
-.account-sheet-row-danger {
-  color: var(--danger);
-  border-color: var(--danger-bg);
-  background: var(--danger-bg);
-}
-
-/* Light header (badge/wordmark + avatar) used on light-theme screens,
-   as opposed to the dark full-bleed .top-bar used elsewhere. */
+/* Light header (badge/wordmark + History link + Logout) used on
+   light-theme screens, as opposed to the dark full-bleed .top-bar used
+   elsewhere. */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-top: env(safe-area-inset-top);
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-header-history-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
 }
 
 .app-header-account {
@@ -1023,23 +1006,36 @@ textarea.field-input {
   gap: 10px;
 }
 
-.checklist-product-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  background: rgba(193, 68, 14, 0.14);
-  border: 1px solid rgba(193, 68, 14, 0.3);
-  border-radius: 8px;
-  color: #ff9d6e;
-  font-size: 11px;
-  font-weight: 700;
+.checklist-header-id {
+  min-width: 0;
 }
 
-.checklist-batch-sub {
+.checklist-header-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #ff9d6e;
+}
+
+.checklist-header-name {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #ffffff;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checklist-header-meta {
+  display: block;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
-  margin: 4px 0 0;
+  margin-top: 5px;
 }
 
 .checklist-timer {
@@ -1048,7 +1044,7 @@ textarea.field-input {
 }
 
 .checklist-timer-value {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.5px;
   color: #ffffff;
@@ -1060,19 +1056,11 @@ textarea.field-input {
   color: rgba(255, 255, 255, 0.45);
 }
 
-.checklist-workers {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-}
-
 .checklist-progress-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 4px;
+  padding-top: 10px;
 }
 
 .checklist-progress-label {
@@ -1083,8 +1071,8 @@ textarea.field-input {
 }
 
 .checklist-progress-pct {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   color: #ff9d6e;
 }
 

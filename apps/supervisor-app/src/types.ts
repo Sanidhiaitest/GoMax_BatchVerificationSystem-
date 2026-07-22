@@ -23,6 +23,8 @@ export interface BatchMaterial {
   quantity: number | null
   ticked_at: string | null
   suspicious: boolean
+  requires_photo: boolean
+  photo_path: string | null
 }
 
 export type TestingStatus = 'not_sent' | 'pending' | 'in_progress' | 'passed' | 'failed'

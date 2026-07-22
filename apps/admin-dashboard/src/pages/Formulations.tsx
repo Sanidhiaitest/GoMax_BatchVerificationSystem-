@@ -227,6 +227,15 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
     else load()
   }
 
+  async function toggleRequiresPhoto(m: FormulationMaterial) {
+    const { error } = await supabase
+      .from('formulation_materials')
+      .update({ requires_photo: !m.requires_photo })
+      .eq('id', m.id)
+    if (error) setError(error.message)
+    else load()
+  }
+
   async function move(index: number, direction: -1 | 1) {
     const target = index + direction
     if (target < 0 || target >= materials.length) return
@@ -250,6 +259,13 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
             <span>{m.description}</span>
           </div>
           <div className="material-editor-actions">
+            <button
+              className={`photo-toggle ${m.requires_photo ? 'photo-toggle-on' : ''}`}
+              onClick={() => toggleRequiresPhoto(m)}
+              title={m.requires_photo ? 'Photo required — click to turn off' : 'Click to require a photo for this material'}
+            >
+              📷 {m.requires_photo ? 'Required' : 'Optional'}
+            </button>
             <button className="icon-btn-sm" onClick={() => move(i, -1)} disabled={i === 0}>
               ↑
             </button>

@@ -168,6 +168,7 @@ export default function BatchDetail() {
                 <th>Material</th>
                 <th>Qty</th>
                 <th>Status</th>
+                <th>Photo</th>
                 <th>Time</th>
               </tr>
             </thead>
@@ -184,6 +185,15 @@ export default function BatchDetail() {
                       {m.status === 'added' ? '✓' : m.status === 'skipped' ? '✗' : '—'}
                     </span>
                     {m.suspicious && <span className="suspicious-badge"> ⚠</span>}
+                  </td>
+                  <td>
+                    {m.photo_path ? (
+                      <MaterialPhotoLink path={m.photo_path} />
+                    ) : m.requires_photo ? (
+                      <span className="hint-text">—</span>
+                    ) : (
+                      <span className="hint-text">n/a</span>
+                    )}
                   </td>
                   <td className="hint-text">
                     {m.ticked_at ? new Date(m.ticked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
@@ -218,6 +228,28 @@ function TimelineItem({ label, value, accent }: { label: string; value: string; 
       <span className="timeline-label">{label}</span>
       <span className={`timeline-value ${accent ? 'timeline-value-accent' : ''}`}>{value}</span>
     </div>
+  )
+}
+
+function MaterialPhotoLink({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.storage.from('material-photos').createSignedUrl(path, 600)
+      if (!cancelled && data) setUrl(data.signedUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+
+  if (!url) return <span className="hint-text">…</span>
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="material-photo-link">
+      <img src={url} alt="Material evidence" />
+    </a>
   )
 }
 

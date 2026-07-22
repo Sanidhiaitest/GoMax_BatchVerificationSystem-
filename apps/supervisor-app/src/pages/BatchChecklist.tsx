@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { materialIcon } from '../materialIcon'
 import type { Batch, BatchMaterial } from '../types'
 
 interface BatchWithFormulation extends Batch {
@@ -106,20 +107,18 @@ export default function BatchChecklist() {
     <div className="checklist-screen">
       <div className="checklist-header">
         <div className="checklist-header-row">
-          <div>
-            <span className="checklist-product-pill">
-              {batch.formulations?.code}
-              {batch.formulations?.name ? ` · ${batch.formulations.name}` : ''}
+          <div className="checklist-header-id">
+            <span className="checklist-header-label">{batch.formulations?.code}</span>
+            <span className="checklist-header-name">{batch.formulations?.name ?? batch.formulations?.code}</span>
+            <span className="checklist-header-meta">
+              Batch #{batch.batch_number} · {batch.mason_name}
             </span>
-            <p className="checklist-batch-sub">Batch #{batch.batch_number}</p>
           </div>
           <div className="checklist-timer">
             <span className="checklist-timer-value">{formatElapsed(elapsedSeconds)}</span>
             <span className="checklist-timer-label">{readOnly ? 'total time' : 'elapsed'}</span>
           </div>
         </div>
-
-        <p className="checklist-workers">👷 {batch.mason_name}</p>
 
         <div className="checklist-progress-row">
           <span className="checklist-progress-label">
@@ -243,10 +242,21 @@ function MaterialCard({
   readOnly: boolean
 }) {
   const [quantity, setQuantity] = useState(material.quantity?.toString() ?? '')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [rowError, setRowError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null)
 
   const locked = readOnly || material.status !== 'pending'
+
+  function pickPhoto(file: File | null) {
+    setPhotoFile(file)
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return file ? URL.createObjectURL(file) : null
+    })
+  }
 
   async function mark(status: 'added' | 'skipped') {
     setRowError(null)
@@ -254,18 +264,33 @@ function MaterialCard({
       setRowError('Quantity is required to mark this as added.')
       return
     }
-    setBusy(true)
-    const { error } = await supabase.rpc('tick_material', {
-      p_batch_material_id: material.id,
-      p_status: status,
-      p_quantity: status === 'added' ? Number(quantity) : null,
-    })
-    setBusy(false)
-    if (error) {
-      setRowError(error.message)
+    if (status === 'added' && material.requires_photo && !photoFile) {
+      setRowError('A photo is required to mark this as added.')
       return
     }
-    onChanged()
+    setBusy(true)
+    try {
+      let photoPath: string | null = null
+      if (status === 'added' && photoFile) {
+        const ext = photoFile.name.split('.').pop() || 'jpg'
+        const path = `${material.id}/${Date.now()}.${ext}`
+        const { error: upErr } = await supabase.storage.from('material-photos').upload(path, photoFile)
+        if (upErr) throw upErr
+        photoPath = path
+      }
+      const { error } = await supabase.rpc('tick_material', {
+        p_batch_material_id: material.id,
+        p_status: status,
+        p_quantity: status === 'added' ? Number(quantity) : null,
+        p_photo_path: photoPath,
+      })
+      if (error) throw error
+      onChanged()
+    } catch (err) {
+      setRowError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (locked) {
@@ -273,7 +298,7 @@ function MaterialCard({
       <div className="material-card material-card-locked">
         <div className="material-card-result">
           <div className="material-card-head">
-            <span className="material-icon">🧱</span>
+            <span className="material-icon">{materialIcon(material.description)}</span>
             <div className="material-card-title-group">
               <span className="material-card-name">{material.description}</span>
               {material.ticked_at && (
@@ -286,6 +311,7 @@ function MaterialCard({
             {material.suspicious && <span className="suspicious-badge"> ⚠ fast</span>}
           </span>
         </div>
+        {material.photo_path && <MaterialPhotoThumb path={material.photo_path} />}
       </div>
     )
   }
@@ -293,7 +319,7 @@ function MaterialCard({
   return (
     <div className="material-card">
       <div className="material-card-head">
-        <span className="material-icon">🧱</span>
+        <span className="material-icon">{materialIcon(material.description)}</span>
         <div className="material-card-title-group">
           <span className="material-card-name">{material.description}</span>
           <span className="material-card-meta">Required</span>
@@ -312,16 +338,75 @@ function MaterialCard({
         />
       </div>
 
+      {material.requires_photo && (
+        <div className="material-card-section">
+          <span className="material-card-label">Photo</span>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => pickPhoto(e.target.files?.[0] ?? null)}
+          />
+          {photoPreview ? (
+            <div className="photo-preview">
+              <img src={photoPreview} alt="Selected" />
+              <div className="photo-preview-actions">
+                <button type="button" className="material-skip-btn" onClick={() => fileRef.current?.click()}>
+                  Retake
+                </button>
+                <button type="button" className="link-btn" onClick={() => pickPhoto(null)}>
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="photo-dropzone" onClick={() => fileRef.current?.click()}>
+              <span className="photo-dropzone-icon">📷</span>
+              <span className="photo-dropzone-title">Take / Upload Photo</span>
+              <span className="photo-dropzone-sub">Required for this material</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {rowError && <p className="error-text">{rowError}</p>}
 
       <div className="material-card-actions">
         <button className="material-skip-btn" onClick={() => mark('skipped')} disabled={busy}>
           Skip
         </button>
-        <button className="material-mark-btn" onClick={() => mark('added')} disabled={busy}>
+        <button
+          className="material-mark-btn"
+          onClick={() => mark('added')}
+          disabled={busy || (material.requires_photo && !photoFile)}
+        >
           {busy ? 'Saving…' : 'Mark as Added'}
         </button>
       </div>
     </div>
+  )
+}
+
+function MaterialPhotoThumb({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.storage.from('material-photos').createSignedUrl(path, 600)
+      if (!cancelled && data) setUrl(data.signedUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+
+  if (!url) return null
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="result-photo">
+      <img src={url} alt="Material evidence" />
+    </a>
   )
 }

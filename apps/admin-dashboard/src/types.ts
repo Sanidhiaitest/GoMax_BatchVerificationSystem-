@@ -14,6 +14,7 @@ export interface FormulationMaterial {
   description: string
   sort_order: number
   active: boolean
+  requires_photo: boolean
 }
 
 export type SupervisorRole = 'supervisor' | 'tester'
@@ -36,6 +37,8 @@ export interface BatchMaterial {
   ticked_at: string | null
   suspicious: boolean
   gap_seconds: number | null
+  requires_photo: boolean
+  photo_path: string | null
 }
 
 export type FlagSeverity = 'info' | 'warning' | 'critical'

@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 import { GoMaxWordmark } from './GoMaxLogo'
 
 // Light header used on the light-theme screens (formulation picker, etc.) —
-// the compact badge/wordmark lockup on the left, a small avatar button on
-// the right that opens an account sheet (history + logout), since there's
-// no room here for a full identity bar like the dark top-bar screens use.
+// the compact badge/wordmark lockup on the left, a History link and a
+// Logout button on the right. Tapping Logout goes straight to a confirm
+// step (no menu in between) so the label does what it says.
 export default function AppHeader({
   name,
   historyLabel,
@@ -18,62 +17,38 @@ export default function AppHeader({
   onHistory: () => void
   onLogout: () => void
 }) {
-  const [menuOpen, setMenuOpen] = useState(false)
   const [confirmingLogout, setConfirmingLogout] = useState(false)
-  const navigate = useNavigate()
-
-  function closeAll() {
-    setMenuOpen(false)
-    setConfirmingLogout(false)
-  }
 
   function handleLogout() {
-    closeAll()
     onLogout()
-    navigate('/', { replace: true })
+    // A hard reload (not client-side navigation) so nothing — an in-flight
+    // route transition, a blurred modal backdrop layer some mobile browsers
+    // fail to un-composite on unmount — can survive into the next screen.
+    // The device's stored session is already cleared above, so the fresh
+    // boot lands straight on the picker screen.
+    window.location.hash = '/'
+    window.location.reload()
   }
 
   return (
     <>
       <header className="app-header">
         <GoMaxWordmark subtitle="Batch QC" />
-        <button className="app-header-account" onClick={() => setMenuOpen(true)} aria-label="Account">
-          <span className="app-header-logout-label">Logout</span>
-          <span className="app-header-avatar-box">
-            <Avatar name={name} size={22} />
-          </span>
-        </button>
+        <div className="app-header-actions">
+          <button className="app-header-history-link" onClick={onHistory}>
+            {historyLabel}
+          </button>
+          <button className="app-header-account" onClick={() => setConfirmingLogout(true)} aria-label="Log out">
+            <span className="app-header-logout-label">Logout</span>
+            <span className="app-header-avatar-box">
+              <Avatar name={name} size={22} />
+            </span>
+          </button>
+        </div>
       </header>
 
-      {menuOpen && !confirmingLogout && (
-        <div className="modal-backdrop" onClick={closeAll}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <p className="modal-title">{name}</p>
-            <div className="account-sheet-actions">
-              <button
-                className="account-sheet-row"
-                onClick={() => {
-                  closeAll()
-                  onHistory()
-                }}
-              >
-                <span>🕐</span>
-                {historyLabel}
-              </button>
-              <button className="account-sheet-row account-sheet-row-danger" onClick={() => setConfirmingLogout(true)}>
-                <span>🚪</span>
-                Log out
-              </button>
-            </div>
-            <button className="link-btn" onClick={closeAll}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {menuOpen && confirmingLogout && (
-        <div className="modal-backdrop" onClick={closeAll}>
+      {confirmingLogout && (
+        <div className="modal-backdrop" onClick={() => setConfirmingLogout(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <p className="modal-title">Log out?</p>
             <p className="modal-body">You'll need your PIN to sign in again.</p>
