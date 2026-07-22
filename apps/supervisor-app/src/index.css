@@ -445,6 +445,36 @@ textarea.field-input {
   box-shadow: 0 3px 10px rgba(193, 68, 14, 0.3);
 }
 
+/* Section headers (icon + uppercase label, optional "View all" CTA) above
+   the history strip and product list. */
+.list-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 2px 0 -6px;
+}
+
+.list-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.list-section-icon {
+  font-size: 13px;
+}
+
+.list-section-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 /* Recent batches — small horizontal-scroll strip above the product list */
 .recent-batches {
   display: flex;
@@ -1573,9 +1603,7 @@ textarea.field-input {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 18px 20px 20px;
-  background: #0d1f3c;
-  border-radius: 22px;
+  padding: 6px 2px 0;
 }
 
 .setup-hero-label {

@@ -115,18 +115,28 @@ export default function FormulationSelect() {
       )}
 
       {recent.length > 0 && (
-        <div className="recent-batches">
-          {recent.map((b) => (
-            <button key={b.id} className="recent-batch-card" onClick={() => navigate(`/batch/${b.id}`)}>
-              <span className="recent-batch-top">
-                <span className="recent-batch-number">#{b.batch_number}</span>
-                <span className="recent-batch-time">{timeAgo(b.started_at)}</span>
-              </span>
-              <span className="recent-batch-name">{b.formulations?.base_name ?? b.formulations?.code}</span>
-              <span className="recent-batch-sub">{b.mason_name}</span>
+        <>
+          <div className="list-section-head">
+            <span className="list-section-title">
+              <span className="list-section-icon">🕐</span>History
+            </span>
+            <button className="list-section-cta" onClick={() => navigate('/history')}>
+              View all
             </button>
-          ))}
-        </div>
+          </div>
+          <div className="recent-batches">
+            {recent.map((b) => (
+              <button key={b.id} className="recent-batch-card" onClick={() => navigate(`/batch/${b.id}`)}>
+                <span className="recent-batch-top">
+                  <span className="recent-batch-number">#{b.batch_number}</span>
+                  <span className="recent-batch-time">{timeAgo(b.started_at)}</span>
+                </span>
+                <span className="recent-batch-name">{b.formulations?.base_name ?? b.formulations?.code}</span>
+                <span className="recent-batch-sub">{b.mason_name}</span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {loading && <p className="hint-text">Loading formulations…</p>}
@@ -136,6 +146,14 @@ export default function FormulationSelect() {
       )}
       {!loading && formulations.length > 0 && filtered.length === 0 && (
         <p className="hint-text">Nothing in this category.</p>
+      )}
+
+      {!loading && filtered.length > 0 && (
+        <div className="list-section-head">
+          <span className="list-section-title">
+            <span className="list-section-icon">📦</span>Products
+          </span>
+        </div>
       )}
 
       <div className="list">
