@@ -11,6 +11,8 @@ export default function Submitted() {
   const { batchId } = useParams<{ batchId: string }>()
   const [batch, setBatch] = useState<SubmittedBatch | null>(null)
   const [materialsDone, setMaterialsDone] = useState<{ added: number; total: number }>({ added: 0, total: 0 })
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -34,6 +36,19 @@ export default function Submitted() {
     }
   }, [batchId])
 
+  async function handleSendForTesting() {
+    if (!batchId) return
+    setSending(true)
+    setSendError(null)
+    const { error } = await supabase.rpc('send_batch_for_testing', { p_batch_id: batchId })
+    setSending(false)
+    if (error) {
+      setSendError(error.message)
+      return
+    }
+    setBatch((prev) => (prev ? { ...prev, testing_status: 'pending' } : prev))
+  }
+
   const timeTaken = batch?.submitted_at
     ? Math.round((new Date(batch.submitted_at).getTime() - new Date(batch.started_at).getTime()) / 1000)
     : null
@@ -42,12 +57,15 @@ export default function Submitted() {
     timeTaken == null ? '—' : timeTaken < 60 ? `${timeTaken}s` : `${Math.round(timeTaken / 60)}m`
 
   const productName = batch?.formulations?.base_name ?? batch?.formulations?.name ?? batch?.formulations?.code ?? ''
+  const sentForTesting = batch ? batch.testing_status !== 'not_sent' : false
 
   return (
     <div className="submitted-screen">
       <div className="submitted-icon">✓</div>
       <h1 className="submitted-title">Ho Gaya! 🎉</h1>
-      <p className="submitted-subtitle">Submitted for QC testing ✓</p>
+      <p className="submitted-subtitle">
+        {sentForTesting ? 'Sent for QC testing ✓' : 'Batch complete — not yet sent for testing'}
+      </p>
 
       <div className="submitted-card">
         <p className="submitted-card-label">Batch Summary</p>
@@ -79,9 +97,19 @@ export default function Submitted() {
         </div>
       </div>
 
-      <button className="btn btn-primary" onClick={() => navigate('/formulation')}>
-        Start New Batch
-      </button>
+      {sendError && <p className="error-text">{sendError}</p>}
+
+      <div className="submitted-actions">
+        {!sentForTesting && (
+          <button className="btn btn-primary" onClick={handleSendForTesting} disabled={sending}>
+            {sending ? 'Sending…' : '🧪 Send for Testing'}
+          </button>
+        )}
+
+        <button className="btn btn-ghost" onClick={() => navigate('/formulation')}>
+          Start New Batch
+        </button>
+      </div>
     </div>
   )
 }

@@ -86,12 +86,7 @@ export default function FormulationSelect() {
 
   return (
     <div className="screen">
-      <AppHeader
-        name={supervisor?.name ?? ''}
-        historyLabel="History"
-        onHistory={() => navigate('/history')}
-        onLogout={logout}
-      />
+      <AppHeader name={supervisor?.name ?? ''} onLogout={logout} />
 
       <div className="greeting">
         <h1 className="title picker-title">

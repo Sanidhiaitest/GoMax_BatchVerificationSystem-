@@ -747,6 +747,7 @@ textarea.field-input {
   align-items: flex-end;
   justify-content: center;
   z-index: 10;
+  overflow-y: auto;
   animation: backdrop-in 0.2s ease both;
 }
 
@@ -758,6 +759,8 @@ textarea.field-input {
 .modal {
   width: 100%;
   max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-bottom: none;
@@ -805,21 +808,6 @@ textarea.field-input {
   align-items: center;
   justify-content: space-between;
   padding-top: env(safe-area-inset-top);
-}
-
-.app-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.app-header-history-link {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dim);
 }
 
 .app-header-account {
@@ -1472,6 +1460,13 @@ textarea.field-input {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 6px 0;
+}
+
+.submitted-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
 .submitted-screen .btn {

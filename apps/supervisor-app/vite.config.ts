@@ -28,10 +28,26 @@ export default defineConfig({
         // (batch data must never be served stale/offline — see
         // NetworkOnly runtime rule below).
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Worker/product photos live under public/ and match the glob above
+        // (they're .png/.jpg), but they're content, not app shell, can be
+        // large (uploaded straight from a phone, no resizing), and keep
+        // growing as more get added — precaching them at service-worker
+        // install time is what broke the build (a single 2MB+ photo fails
+        // Workbox's default precache size limit). Regular HTTP caching
+        // handles them fine on demand instead.
+        globIgnores: ['products/**', 'avatars/**'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.hostname.endsWith('supabase.co'),
             handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/products/') || url.pathname.startsWith('/avatars/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'content-images',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
           },
         ],
         // A new deployment should take over immediately instead of the

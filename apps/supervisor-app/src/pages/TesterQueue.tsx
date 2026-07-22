@@ -56,18 +56,22 @@ export default function TesterQueue() {
 
   return (
     <div className="screen">
-      <AppHeader
-        name={supervisor?.name ?? ''}
-        historyLabel="History"
-        onHistory={() => navigate('/testing/history')}
-        onLogout={logout}
-      />
+      <AppHeader name={supervisor?.name ?? ''} onLogout={logout} />
 
       <div className="greeting">
         <h1 className="title picker-title">
           Hi {firstName}, ready to test? 🧪
         </h1>
         <p className="subtitle picker-subtitle">Batches waiting for QC</p>
+      </div>
+
+      <div className="list-section-head">
+        <span className="list-section-title">
+          <span className="list-section-icon">🧪</span>Queue
+        </span>
+        <button className="list-section-cta" onClick={() => navigate('/testing/history')}>
+          View history
+        </button>
       </div>
 
       {loading && <p className="hint-text">Loading…</p>}

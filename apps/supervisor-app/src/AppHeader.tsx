@@ -3,18 +3,15 @@ import Avatar from './Avatar'
 import { GoMaxWordmark } from './GoMaxLogo'
 
 // Light header used on the light-theme screens (formulation picker, etc.) —
-// the compact badge/wordmark lockup on the left, a History link and a
-// Logout button on the right. Tapping Logout goes straight to a confirm
-// step (no menu in between) so the label does what it says.
+// the compact badge/wordmark lockup on the left, a Logout button on the
+// right. Tapping Logout goes straight to a confirm step (no menu in
+// between) so the label does what it says. History lives in each page's
+// own body instead of up here (see the "HISTORY · View all" section).
 export default function AppHeader({
   name,
-  historyLabel,
-  onHistory,
   onLogout,
 }: {
   name: string
-  historyLabel: string
-  onHistory: () => void
   onLogout: () => void
 }) {
   const [confirmingLogout, setConfirmingLogout] = useState(false)
@@ -34,17 +31,12 @@ export default function AppHeader({
     <>
       <header className="app-header">
         <GoMaxWordmark subtitle="Batch QC" />
-        <div className="app-header-actions">
-          <button className="app-header-history-link" onClick={onHistory}>
-            {historyLabel}
-          </button>
-          <button className="app-header-account" onClick={() => setConfirmingLogout(true)} aria-label="Log out">
-            <span className="app-header-logout-label">Logout</span>
-            <span className="app-header-avatar-box">
-              <Avatar name={name} size={22} />
-            </span>
-          </button>
-        </div>
+        <button className="app-header-account" onClick={() => setConfirmingLogout(true)} aria-label="Log out">
+          <span className="app-header-logout-label">Logout</span>
+          <span className="app-header-avatar-box">
+            <Avatar name={name} size={22} />
+          </span>
+        </button>
       </header>
 
       {confirmingLogout && (

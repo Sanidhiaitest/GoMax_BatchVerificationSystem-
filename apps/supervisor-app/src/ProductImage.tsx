@@ -1,30 +1,44 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { avatarColors, initials } from './avatar'
 import { variantSwatch } from './variants'
 import type { Formulation } from './types'
 
-// Shows /products/{code}.png (drop real product photos there — see
-// public/products/README.txt) when present, falling back to a coloured
-// swatch with the code initials on 404 / while none exists. Grey/White
-// variants use their shared swatch colour so the fallback stays consistent.
+function slugify(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, '-')
+}
+
+const EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp']
+
+// Tries /products/{slug}.{ext} for every name this product goes by (code,
+// base name, full name) across every common image extension, since photos
+// get uploaded named after whatever the person uploading was looking at —
+// the product's name on the box, not necessarily its internal code. Falls
+// back to a coloured swatch with initials once every candidate 404s.
 export default function ProductImage({
   formulation,
   className,
 }: {
-  formulation: Pick<Formulation, 'code' | 'variant'>
+  formulation: Pick<Formulation, 'code' | 'variant'> & Partial<Pick<Formulation, 'name' | 'base_name'>>
   className?: string
 }) {
-  const [imageFailed, setImageFailed] = useState(false)
-  const slug = formulation.code.trim().toLowerCase().replace(/\s+/g, '-')
+  const candidates = useMemo(() => {
+    const names = [formulation.code, formulation.base_name, formulation.name].filter(
+      (v): v is string => Boolean(v && v.trim()),
+    )
+    const slugs = Array.from(new Set(names.map(slugify)))
+    return slugs.flatMap((slug) => EXTENSIONS.map((ext) => `/products/${slug}.${ext}`))
+  }, [formulation.code, formulation.base_name, formulation.name])
 
-  if (!imageFailed) {
+  const [attempt, setAttempt] = useState(0)
+
+  if (attempt < candidates.length) {
     return (
       <span className={className}>
         <img
           className="product-image-photo"
-          src={`/products/${slug}.png`}
+          src={candidates[attempt]}
           alt={formulation.code}
-          onError={() => setImageFailed(true)}
+          onError={() => setAttempt((a) => a + 1)}
         />
       </span>
     )
