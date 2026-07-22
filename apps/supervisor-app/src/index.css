@@ -809,7 +809,27 @@ textarea.field-input {
   padding-top: env(safe-area-inset-top);
 }
 
-.app-header-avatar {
+.app-header-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: transform 0.1s ease;
+}
+
+.app-header-account:active {
+  transform: scale(0.96);
+}
+
+.app-header-logout-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.app-header-avatar-box {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
@@ -819,11 +839,6 @@ textarea.field-input {
   background: #eef2f8;
   border: 1px solid rgba(10, 22, 40, 0.1);
   border-radius: 12px;
-  transition: transform 0.1s ease;
-}
-
-.app-header-avatar:active {
-  transform: scale(0.92);
 }
 
 /* Material checklist rows */

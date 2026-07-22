@@ -37,8 +37,11 @@ export default function AppHeader({
     <>
       <header className="app-header">
         <GoMaxWordmark subtitle="Batch QC" />
-        <button className="app-header-avatar" onClick={() => setMenuOpen(true)} aria-label="Account">
-          <Avatar name={name} size={22} />
+        <button className="app-header-account" onClick={() => setMenuOpen(true)} aria-label="Account">
+          <span className="app-header-logout-label">Logout</span>
+          <span className="app-header-avatar-box">
+            <Avatar name={name} size={22} />
+          </span>
         </button>
       </header>
 
