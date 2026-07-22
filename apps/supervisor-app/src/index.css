@@ -1858,6 +1858,40 @@ textarea.field-input {
    light cards for lists, a dark hero + white sheet for the detail view.
    =================================================================== */
 
+/* Small 3-up stats dashboard at the top of the tester queue */
+.tester-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.tester-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  background: #ffffff;
+  border: 1px solid rgba(10, 22, 40, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tester-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.tester-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
 /* Empty state (queue cleared) */
 .empty-state {
   display: flex;
@@ -2153,41 +2187,48 @@ textarea.field-input {
   flex: 1;
 }
 
-/* Pass / fail decision */
-.tester-decision {
+/* Pass / fail result tabs — select which result before the separate
+   "Submit to Admin" button actually sends it, instead of a single tap
+   immediately submitting. */
+.result-tabs {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 16px;
 }
 
-.decision-btn {
+.result-tab {
   flex: 1;
-  padding: 16px;
-  border-radius: 14px;
+  padding: 14px;
+  border-radius: 12px;
   border: none;
-  font-size: 16px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  transition: transform 0.1s ease, filter 0.15s ease;
+  transition: transform 0.1s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.decision-btn:active {
+.result-tab:active {
   transform: scale(0.98);
 }
 
-.decision-btn:disabled {
+.result-tab:disabled {
   opacity: 0.6;
 }
 
-.decision-fail {
-  background: var(--danger-bg);
-  color: var(--danger);
-  border: 1.5px solid rgba(220, 38, 38, 0.3);
-}
-
-.decision-pass {
+.result-tab-pass.active {
   background: var(--success);
   color: #fff;
   box-shadow: 0 3px 12px rgba(22, 163, 74, 0.27);
+}
+
+.result-tab-fail.active {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(220, 38, 38, 0.27);
 }
 
 /* Result banner + evidence (completed test) */

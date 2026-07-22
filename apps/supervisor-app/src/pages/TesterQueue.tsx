@@ -28,8 +28,10 @@ function timeAgo(iso: string | null): string {
 export default function TesterQueue() {
   const { supervisor, logout } = useSupervisor()
   const [rows, setRows] = useState<QueueRow[]>([])
+  const [completedCount, setCompletedCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supervisorFilter, setSupervisorFilter] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const firstName = supervisor?.name.split(' ')[0] ?? ''
@@ -37,22 +39,35 @@ export default function TesterQueue() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const { data, error } = await supabase
-        .from('batches')
-        .select(
-          'id, batch_number, batch_date, testing_status, sent_for_testing_at, formulations(code, name, base_name), supervisors!batches_supervisor_id_fkey(name)',
-        )
-        .in('testing_status', ['pending', 'in_progress'])
-        .order('sent_for_testing_at', { ascending: true })
+      const [{ data, error }, { count }] = await Promise.all([
+        supabase
+          .from('batches')
+          .select(
+            'id, batch_number, batch_date, testing_status, sent_for_testing_at, formulations(code, name, base_name), supervisors!batches_supervisor_id_fkey(name)',
+          )
+          .in('testing_status', ['pending', 'in_progress'])
+          .order('sent_for_testing_at', { ascending: true }),
+        supabase
+          .from('batches')
+          .select('id', { count: 'exact', head: true })
+          .in('testing_status', ['passed', 'failed']),
+      ])
       if (cancelled) return
       if (error) setError(error.message)
       else setRows((data as unknown as QueueRow[]) ?? [])
+      setCompletedCount(count ?? 0)
       setLoading(false)
     })()
     return () => {
       cancelled = true
     }
   }, [])
+
+  const pendingCount = rows.filter((r) => r.testing_status === 'pending').length
+  const inProgressCount = rows.filter((r) => r.testing_status === 'in_progress').length
+
+  const supervisorNames = Array.from(new Set(rows.map((r) => r.supervisors?.name).filter((n): n is string => Boolean(n))))
+  const visibleRows = supervisorFilter ? rows.filter((r) => r.supervisors?.name === supervisorFilter) : rows
 
   return (
     <div className="screen">
@@ -65,6 +80,21 @@ export default function TesterQueue() {
         <p className="subtitle picker-subtitle">Batches waiting for QC</p>
       </div>
 
+      <div className="tester-stats">
+        <div className="tester-stat">
+          <span className="tester-stat-value">{pendingCount}</span>
+          <span className="tester-stat-label">Waiting</span>
+        </div>
+        <div className="tester-stat">
+          <span className="tester-stat-value">{inProgressCount}</span>
+          <span className="tester-stat-label">In progress</span>
+        </div>
+        <div className="tester-stat">
+          <span className="tester-stat-value">{completedCount}</span>
+          <span className="tester-stat-label">Completed</span>
+        </div>
+      </div>
+
       <div className="list-section-head">
         <span className="list-section-title">
           <span className="list-section-icon">🧪</span>Queue
@@ -73,6 +103,26 @@ export default function TesterQueue() {
           View history
         </button>
       </div>
+
+      {supervisorNames.length > 1 && (
+        <div className="category-tabs">
+          <button
+            className={`category-tab ${supervisorFilter === null ? 'active' : ''}`}
+            onClick={() => setSupervisorFilter(null)}
+          >
+            All
+          </button>
+          {supervisorNames.map((name) => (
+            <button
+              key={name}
+              className={`category-tab ${supervisorFilter === name ? 'active' : ''}`}
+              onClick={() => setSupervisorFilter(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading && <p className="hint-text">Loading…</p>}
       {error && <p className="error-text">{error}</p>}
@@ -83,9 +133,12 @@ export default function TesterQueue() {
           <p className="hint-text">Nothing waiting right now — new batches will show up here.</p>
         </div>
       )}
+      {!loading && rows.length > 0 && visibleRows.length === 0 && (
+        <p className="hint-text">No batches from {supervisorFilter} right now.</p>
+      )}
 
       <div className="list">
-        {rows.map((r) => {
+        {visibleRows.map((r) => {
           const product = r.formulations?.base_name ?? r.formulations?.name ?? r.formulations?.code
           const inProgress = r.testing_status === 'in_progress'
           return (

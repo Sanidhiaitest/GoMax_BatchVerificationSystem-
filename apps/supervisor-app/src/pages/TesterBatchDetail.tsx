@@ -166,6 +166,7 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+  const [result, setResult] = useState<'passed' | 'failed' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -178,7 +179,8 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
     })
   }
 
-  async function complete(result: 'passed' | 'failed') {
+  async function submit() {
+    if (!result) return
     setSubmitting(true)
     setError(null)
     try {
@@ -262,16 +264,33 @@ function CompleteTestingForm({ batchId, onDone }: { batchId: string; onDone: () 
 
       <AudioRecorder onRecorded={setAudioBlob} />
 
+      <section className="setup-section">
+        <h2 className="setup-section-title">Result</h2>
+        <div className="result-tabs">
+          <button
+            type="button"
+            className={`result-tab result-tab-pass ${result === 'passed' ? 'active' : ''}`}
+            onClick={() => setResult('passed')}
+            disabled={submitting}
+          >
+            ✓ Pass
+          </button>
+          <button
+            type="button"
+            className={`result-tab result-tab-fail ${result === 'failed' ? 'active' : ''}`}
+            onClick={() => setResult('failed')}
+            disabled={submitting}
+          >
+            ✗ Fail
+          </button>
+        </div>
+      </section>
+
       {error && <p className="error-text">{error}</p>}
 
-      <div className="tester-decision">
-        <button className="decision-btn decision-fail" onClick={() => complete('failed')} disabled={submitting}>
-          ✗ Fail
-        </button>
-        <button className="decision-btn decision-pass" onClick={() => complete('passed')} disabled={submitting}>
-          {submitting ? 'Saving…' : '✓ Pass'}
-        </button>
-      </div>
+      <button className="btn btn-primary" onClick={submit} disabled={!result || submitting}>
+        {submitting ? 'Submitting…' : 'Submit to Admin'}
+      </button>
     </div>
   )
 }
