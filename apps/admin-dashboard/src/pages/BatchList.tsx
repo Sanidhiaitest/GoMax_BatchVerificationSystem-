@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import { BottomSheet, CenterPopup, CheckRow } from '../Sheet'
-import { IconCalendar, IconUsers, IconProducts, IconChevronDown, IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
+import { IconCalendar, IconUsers, IconProducts, IconChevronDown, IconChevronRight, IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
 import type { ReactNode } from 'react'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
@@ -318,12 +318,26 @@ export default function BatchList() {
 }
 
 export function BatchRow({ batch }: { batch: BatchListRow }) {
-  const worstSeverity = batch.batch_flags.length
+  const flagCount = batch.batch_flags.length
+  const worstSeverity = flagCount
     ? batch.batch_flags.reduce(
         (worst, f) => (SEVERITY_RANK[f.severity] < SEVERITY_RANK[worst] ? f.severity : worst),
         'info' as string,
       )
     : null
+
+  // One overall verdict pill — the single thing to glance at — separate
+  // from the Prep/Test breakdown underneath, same hierarchy as the batch
+  // detail page's verdict banner.
+  const verdict: { label: string; tone: string } = (() => {
+    if (batch.testing_status === 'failed') return { label: 'Test failed', tone: 'critical' }
+    if (worstSeverity) return { label: `${flagCount} flag${flagCount > 1 ? 's' : ''}`, tone: worstSeverity }
+    if (batch.status === 'in_progress') return { label: 'Mixing', tone: 'live' }
+    if (batch.testing_status === 'passed') return { label: 'Passed QC', tone: 'success' }
+    if (batch.testing_status === 'pending') return { label: 'Awaiting test', tone: 'info' }
+    if (batch.testing_status === 'in_progress') return { label: 'Testing', tone: 'info' }
+    return { label: 'Submitted', tone: 'muted' }
+  })()
 
   const prep: { label: string; tone: string } =
     batch.status === 'in_progress' ? { label: 'Mixing', tone: 'live' } : { label: 'Done', tone: 'success' }
@@ -349,38 +363,45 @@ export function BatchRow({ batch }: { batch: BatchListRow }) {
       : null
 
   return (
-    <Link
-      to={`/batch/${batch.id}`}
-      className={`list-item batch-row batch-row-v2 ${worstSeverity ? `batch-row-flagged batch-row-flagged-${worstSeverity}` : ''}`}
-    >
-      <div className="batch-row-left">
-        <Avatar name={batch.formulations?.code ?? '?'} />
-        <div className="batch-row-main">
-          <span className="list-item-code">
+    <Link to={`/batch/${batch.id}`} className="batch-card">
+      <div className="batch-card-top">
+        <Avatar name={batch.formulations?.code ?? '?'} size={40} />
+        <div className="batch-card-heading">
+          <span className="batch-card-title">
             {batch.formulations?.code} · #{batch.batch_number}
           </span>
-          <span className="list-item-sub">
+          <span className="batch-card-subtitle">
             by {batch.supervisors?.name}
             {batch.tester && ` · tested by ${batch.tester.name}`}
           </span>
         </div>
       </div>
 
-      <div className="batch-row-columns">
-        <div className="batch-row-col">
-          <span className="batch-row-col-label">Prep</span>
-          <span className={`status-chip status-chip-${prep.tone}`}>{prep.label}</span>
+      <span className={`status-pill-outline status-pill-outline-${verdict.tone}`}>
+        <span className="status-pill-dot" />
+        {verdict.label}
+      </span>
+
+      <div className="batch-card-stats">
+        <div className="batch-card-stat">
+          <span className="batch-card-stat-label">Prep</span>
+          <span className={`batch-card-stat-value batch-card-stat-value-${prep.tone}`}>{prep.label}</span>
         </div>
-        <div className="batch-row-col">
-          <span className="batch-row-col-label">Test</span>
-          <span className={`status-chip status-chip-${test.tone}`}>{test.label}</span>
+        <div className="batch-card-stat">
+          <span className="batch-card-stat-label">Test</span>
+          <span className={`batch-card-stat-value batch-card-stat-value-${test.tone}`}>{test.label}</span>
         </div>
         {mixMinutes !== null && (
-          <div className="batch-row-col">
-            <span className="batch-row-col-label">Time</span>
-            <span className="status-chip status-chip-muted">{mixMinutes}m</span>
+          <div className="batch-card-stat">
+            <span className="batch-card-stat-label">Time</span>
+            <span className="batch-card-stat-value">{mixMinutes}m</span>
           </div>
         )}
+      </div>
+
+      <div className="batch-card-footer">
+        <span>{batch.batch_date}</span>
+        <IconChevronRight size={15} />
       </div>
     </Link>
   )

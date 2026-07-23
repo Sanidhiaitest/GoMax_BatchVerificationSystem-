@@ -20,17 +20,6 @@ interface PersonOption {
   name: string
 }
 
-function timeAgo(iso: string | null): string {
-  if (!iso) return ''
-  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m`
-  const hours = Math.round(mins / 60)
-  if (hours < 24) return `${hours}h`
-  const days = Math.round(hours / 24)
-  return `${days}d`
-}
-
 const today = () => new Date().toISOString().slice(0, 10)
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -132,15 +121,6 @@ export default function Overview() {
     () => batches.filter((b) => b.status === 'submitted' && (b.submitted_at ?? '').slice(0, 10) === today()),
     [batches],
   )
-  const recentDone = useMemo(
-    () =>
-      batches
-        .filter((b) => b.status === 'submitted')
-        .sort((a, b) => (b.submitted_at ?? '').localeCompare(a.submitted_at ?? ''))
-        .slice(0, 5),
-    [batches],
-  )
-
   // Health + activity infographics can be scoped to one person (supervisor
   // or tester) so Ravinder ji can switch between e.g. Bobby and Nanshul and
   // see just their numbers, instead of only ever seeing the plant-wide mix.
@@ -199,6 +179,26 @@ export default function Overview() {
     [todaysBatches],
   )
   const maxHourCount = Math.max(1, ...hourCounts.map((h) => h.count))
+
+  // A third infographic: real daily volume for the last 7 days, plus a
+  // computed delta against the 7 days before that — no fabricated trend.
+  const DAY_MS = 86400000
+  const dateNDaysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString().slice(0, 10)
+  const weekBuckets = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const date = dateNDaysAgo(6 - i)
+        return { date, count: scopedBatches.filter((b) => b.batch_date === date).length }
+      }),
+    [scopedBatches],
+  )
+  const thisWeekTotal = weekBuckets.reduce((sum, d) => sum + d.count, 0)
+  const lastWeekTotal = useMemo(() => {
+    const priorDates = new Set(Array.from({ length: 7 }, (_, i) => dateNDaysAgo(13 - i)))
+    return scopedBatches.filter((b) => priorDates.has(b.batch_date)).length
+  }, [scopedBatches])
+  const weekDelta = lastWeekTotal > 0 ? Math.round(((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100) : null
+  const maxWeekCount = Math.max(1, ...weekBuckets.map((d) => d.count))
 
   const now = new Date()
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
@@ -317,29 +317,38 @@ export default function Overview() {
             </div>
           </div>
 
-          {mixing.length > 0 && (
-            <section>
-              <h2 className="section-title">Happening now</h2>
-              <div className="activity-list">
-                {mixing.map((b) => (
-                  <ActivityRow key={b.id} batch={b} kind="mixing" />
+          <div className="trend-panel">
+            <div className="trend-panel-head">
+              <span className="health-panel-title">This week</span>
+              {weekDelta !== null && (
+                <span className={`trend-delta ${weekDelta >= 0 ? 'trend-delta-up' : 'trend-delta-down'}`}>
+                  {weekDelta >= 0 ? '+' : ''}
+                  {weekDelta}% vs last week
+                </span>
+              )}
+            </div>
+            <div className="trend-panel-body">
+              <span className="trend-value">
+                {thisWeekTotal}
+                <span className="trend-value-unit">batches</span>
+              </span>
+              <div className="trend-sparkline">
+                {weekBuckets.map((d) => (
+                  <div key={d.date} className="trend-bar-track">
+                    <div
+                      className="trend-bar-fill"
+                      style={{ height: `${Math.max(3, (d.count / maxWeekCount) * 36)}px` }}
+                    />
+                  </div>
                 ))}
               </div>
-            </section>
-          )}
+            </div>
+          </div>
 
-          {awaiting.length > 0 && (
-            <section>
-              <h2 className="section-title">In the lab</h2>
-              <div className="activity-list">
-                {awaiting.map((b) => (
-                  <ActivityRow key={b.id} batch={b} kind="testing" />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {attention.length > 0 && (
+          {/* Everyone's summarized already by the pulse tiles above — the
+              one list worth scrolling through is what actually needs a
+              decision. Everything else is a tap away via "See all batches". */}
+          {attention.length > 0 ? (
             <section>
               <h2 className="section-title">Needs attention · {attention.length}</h2>
               <div className="chip-row">
@@ -376,27 +385,20 @@ export default function Overview() {
               </div>
               <div className="activity-list">
                 {visibleAttention.map((b) => (
-                  <ActivityRow key={b.id} batch={b} kind="attention" />
+                  <ActivityRow key={b.id} batch={b} />
                 ))}
               </div>
             </section>
+          ) : (
+            <div className="all-clear-card">
+              <IconCheck size={18} />
+              <span>Nothing flagged right now — the floor is clean.</span>
+            </div>
           )}
 
-          <section>
-            <h2 className="section-title">Recently completed</h2>
-            {recentDone.length === 0 ? (
-              <p className="hint-text">Nothing submitted yet.</p>
-            ) : (
-              <div className="activity-list">
-                {recentDone.map((b) => (
-                  <ActivityRow key={b.id} batch={b} kind="done" />
-                ))}
-              </div>
-            )}
-            <Link to="/batches" className="overview-see-all">
-              See all batches →
-            </Link>
-          </section>
+          <Link to="/batches" className="overview-see-all">
+            See all batches →
+          </Link>
         </>
       )}
     </div>
@@ -425,47 +427,26 @@ function HealthBar({
   )
 }
 
-function ActivityRow({
-  batch,
-  kind,
-}: {
-  batch: OverviewBatch
-  kind: 'mixing' | 'testing' | 'attention' | 'done'
-}) {
+// Overview only ever renders the "Needs attention" flavor now — the other
+// activity kinds (mixing/testing/done) were dropped in favor of the pulse
+// tiles as the summary and "See all batches" for the rest.
+function ActivityRow({ batch }: { batch: OverviewBatch }) {
   const product = batch.formulations?.code ?? '?'
   const flagCount = batch.batch_flags.length
-  const worstMessage = kind === 'attention' && !flagCount ? null : batch.batch_flags[0]?.message ?? null
+  const worstMessage = flagCount ? batch.batch_flags[0]?.message ?? null : null
 
-  let icon = <IconCheck size={14} />
-  let tag: { label: string; cls: string } | null = null
+  const tag =
+    batch.testing_status === 'failed'
+      ? { label: 'Test failed', cls: 'activity-tag-fail' }
+      : { label: `${flagCount} flag${flagCount > 1 ? 's' : ''}`, cls: 'activity-tag-warn' }
 
-  if (kind === 'mixing') {
-    icon = <IconMixing size={14} />
-    tag = { label: `${timeAgo(batch.started_at)} elapsed`, cls: 'activity-tag-live' }
-  } else if (kind === 'testing') {
-    icon = <IconTesting size={14} />
-    tag = {
-      label: batch.testing_status === 'in_progress' ? 'Testing' : 'Awaiting test',
-      cls: 'activity-tag-info',
-    }
-  } else if (kind === 'attention') {
-    if (batch.testing_status === 'failed') {
-      icon = <IconAlert size={14} />
-      tag = { label: 'Test failed', cls: 'activity-tag-fail' }
-    } else {
-      icon = <IconAlert size={14} />
-      tag = { label: `${flagCount} flag${flagCount > 1 ? 's' : ''}`, cls: 'activity-tag-warn' }
-    }
-  } else {
-    icon = <IconCheck size={14} />
-    tag = { label: timeAgo(batch.submitted_at) + ' ago', cls: 'activity-tag-muted' }
-  }
-
-  const iconTone = tag?.cls.replace('activity-tag-', 'activity-icon-') ?? ''
+  const iconTone = tag.cls.replace('activity-tag-', 'activity-icon-')
 
   return (
     <Link to={`/batch/${batch.id}`} className="activity-row">
-      <span className={`activity-icon ${iconTone}`}>{icon}</span>
+      <span className={`activity-icon ${iconTone}`}>
+        <IconAlert size={14} />
+      </span>
       <span className="activity-main">
         <span className="activity-title">
           {product} · #{batch.batch_number}
@@ -476,7 +457,7 @@ function ActivityRow({
         </span>
         {worstMessage && <span className="activity-message">{worstMessage}</span>}
       </span>
-      {tag && <span className={`activity-tag ${tag.cls}`}>{tag.label}</span>}
+      <span className={`activity-tag ${tag.cls}`}>{tag.label}</span>
     </Link>
   )
 }

@@ -205,28 +205,72 @@ export default function BatchDetail() {
         </div>
       </section>
 
-      {/* Timeline — secondary, compact */}
+      {/* Timeline — the batch's life as a sequence of steps, not a grid
+          of disconnected stat boxes. Steps not reached yet stay visible
+          but dimmed, so the whole expected journey is always in view. */}
       <section>
         <h2 className="section-title">Timeline</h2>
-        <div className="timeline">
-          <TimelineItem label="Started" value={clock(batch.started_at)} />
-          <TimelineItem label="Submitted" value={clock(batch.submitted_at)} />
-          <TimelineItem label="Mix time" value={duration !== null ? `${duration}m` : '—'} accent />
-          {batch.sent_for_testing_at && <TimelineItem label="Sent to lab" value={clock(batch.sent_for_testing_at)} />}
-          {batch.testing_completed_at && (
-            <TimelineItem label="Tested" value={clock(batch.testing_completed_at)} />
-          )}
-        </div>
+        <VTimeline
+          steps={[
+            { label: 'Started', time: clock(batch.started_at), state: 'done' },
+            batch.status === 'submitted'
+              ? {
+                  label: 'Submitted',
+                  time: clock(batch.submitted_at),
+                  state: 'done',
+                  sub: duration !== null ? `Mixed for ${duration}m` : undefined,
+                }
+              : { label: 'Submitted', time: null, state: 'pending' },
+            batch.sent_for_testing_at
+              ? { label: 'Sent to lab', time: clock(batch.sent_for_testing_at), state: 'done' }
+              : { label: 'Sent to lab', time: null, state: 'pending' },
+            batch.testing_completed_at
+              ? {
+                  label: batch.testing_status === 'failed' ? 'Failed test' : 'Passed test',
+                  time: clock(batch.testing_completed_at),
+                  state: 'done',
+                  tone: batch.testing_status === 'failed' ? 'critical' : 'success',
+                }
+              : batch.testing_started_at
+              ? { label: 'Testing in progress', time: clock(batch.testing_started_at), state: 'active' }
+              : { label: 'Tested', time: null, state: 'pending' },
+          ]}
+        />
       </section>
     </div>
   )
 }
 
-function TimelineItem({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+interface TimelineStep {
+  label: string
+  time: string | null
+  state: 'done' | 'active' | 'pending'
+  tone?: 'success' | 'critical'
+  sub?: string
+}
+
+function VTimeline({ steps }: { steps: TimelineStep[] }) {
   return (
-    <div className="timeline-item">
-      <span className="timeline-label">{label}</span>
-      <span className={`timeline-value ${accent ? 'timeline-value-accent' : ''}`}>{value}</span>
+    <div className="v-timeline">
+      {steps.map((step, i) => (
+        <div key={step.label} className={`v-timeline-step v-timeline-step-${step.state}`}>
+          <div className="v-timeline-rail">
+            <span className={`v-timeline-node ${step.tone ? `v-timeline-node-${step.tone}` : ''}`} />
+            {i < steps.length - 1 && <span className="v-timeline-line" />}
+          </div>
+          <div className="v-timeline-body">
+            <span className="v-timeline-label">{step.label}</span>
+            {step.time ? (
+              <span className="v-timeline-time">{step.time}</span>
+            ) : (
+              <span className="v-timeline-time v-timeline-time-pending">
+                {step.state === 'active' ? 'In progress' : 'Not yet'}
+              </span>
+            )}
+            {step.sub && <span className="v-timeline-sub">{step.sub}</span>}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -323,13 +367,6 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
           </div>
         )}
 
-        {(batch.testing_started_at || batch.testing_completed_at) && (
-          <div className="timeline timeline-compact">
-            <TimelineItem label="Sent" value={clock(batch.sent_for_testing_at)} />
-            <TimelineItem label="Started" value={clock(batch.testing_started_at)} />
-            <TimelineItem label="Completed" value={clock(batch.testing_completed_at)} />
-          </div>
-        )}
       </div>
     </section>
   )
