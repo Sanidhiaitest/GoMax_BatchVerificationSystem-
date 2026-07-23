@@ -119,6 +119,9 @@ export default function Formulations() {
             </button>
             {expanded === f.id && (
               <>
+                <button className="link-btn back-btn formulation-close-btn" onClick={() => setExpanded(null)}>
+                  ← Back to products
+                </button>
                 <GroupingEditor formulation={f} onSaved={load} />
                 <MaterialsEditor formulationId={f.id} />
               </>
@@ -186,6 +189,7 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
   const [materials, setMaterials] = useState<FormulationMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [newDesc, setNewDesc] = useState('')
+  const [newQty, setNewQty] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   async function load() {
@@ -213,12 +217,24 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
       formulation_id: formulationId,
       description: newDesc.trim(),
       sort_order: materials.length,
+      standard_quantity: newQty.trim() ? Number(newQty) : null,
     })
     if (error) setError(error.message)
     else {
       setNewDesc('')
+      setNewQty('')
       load()
     }
+  }
+
+  async function saveQuantity(m: FormulationMaterial, value: string) {
+    const standard_quantity = value.trim() ? Number(value) : null
+    const { error } = await supabase
+      .from('formulation_materials')
+      .update({ standard_quantity })
+      .eq('id', m.id)
+    if (error) setError(error.message)
+    else setMaterials((prev) => prev.map((row) => (row.id === m.id ? { ...row, standard_quantity } : row)))
   }
 
   async function removeMaterial(id: string) {
@@ -259,6 +275,7 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
             <span>{m.description}</span>
           </div>
           <div className="material-editor-actions">
+            <QuantityInput material={m} onSave={(value) => saveQuantity(m, value)} />
             <button
               className={`photo-toggle ${m.requires_photo ? 'photo-toggle-on' : ''}`}
               onClick={() => toggleRequiresPhoto(m)}
@@ -285,10 +302,45 @@ function MaterialsEditor({ formulationId }: { formulationId: string }) {
           value={newDesc}
           onChange={(e) => setNewDesc(e.target.value)}
         />
+        <input
+          className="field-input material-editor-qty-input"
+          placeholder="Std. qty (kg)"
+          inputMode="decimal"
+          value={newQty}
+          onChange={(e) => setNewQty(e.target.value)}
+        />
         <button className="btn btn-ghost" type="submit" disabled={!newDesc.trim()}>
           Add
         </button>
       </form>
     </div>
+  )
+}
+
+// Standard quantity, editable inline — local draft state so a save only
+// fires on blur/Enter instead of on every keystroke.
+function QuantityInput({ material, onSave }: { material: FormulationMaterial; onSave: (value: string) => void }) {
+  const [value, setValue] = useState(material.standard_quantity?.toString() ?? '')
+
+  useEffect(() => {
+    setValue(material.standard_quantity?.toString() ?? '')
+  }, [material.standard_quantity])
+
+  function commit() {
+    if (value.trim() !== (material.standard_quantity?.toString() ?? '')) onSave(value)
+  }
+
+  return (
+    <input
+      className="field-input material-editor-qty-input"
+      placeholder="Std. qty"
+      inputMode="decimal"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+      }}
+    />
   )
 }

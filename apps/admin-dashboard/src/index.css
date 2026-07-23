@@ -70,6 +70,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background-color: var(--bg);
@@ -78,10 +83,18 @@ body {
   color: var(--text);
 }
 
+/* #root is a fixed-height flex container (not just min-height) so
+   .app-content-column below can be the single scrolling region and
+   .bottom-nav can sit outside it as a plain flex sibling that's always
+   visible — no position:fixed, which is unreliable on mobile browsers
+   with a dynamic address bar (the viewport height changes as it
+   collapses/expands during scroll, which is exactly the kind of thing
+   that made the bottom nav feel "not sticky"). */
 #root {
-  min-height: 100svh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 button {
@@ -162,7 +175,9 @@ a {
 .app-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-header {
@@ -177,6 +192,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 5;
+  flex-shrink: 0;
 }
 
 .app-header-title {
@@ -235,16 +251,21 @@ a {
   font-weight: 600;
 }
 
+/* The one scrolling region — .bottom-nav lives outside this, as a plain
+   flex sibling of .app-shell, so it's simply always on screen instead of
+   relying on position:fixed. */
 .app-content-column {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  order: 1;
 }
 
 .app-main {
   flex: 1;
-  padding-bottom: 80px;
 }
 
 .page {
@@ -282,11 +303,9 @@ a {
 }
 
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
+  flex-shrink: 0;
+  order: 2;
   border-top: 1px solid var(--glass-border);
   background: var(--glass);
   backdrop-filter: blur(20px) saturate(160%);
@@ -883,20 +902,41 @@ a {
   color: var(--accent);
 }
 
+/* Standard-quantity input, inline in each material row */
+.material-editor-qty-input {
+  width: 84px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Close the expanded product editor without hunting for the header row
+   again — sits at the top of the expanded panel. */
+.formulation-close-btn {
+  align-self: flex-start;
+  padding: 4px 2px;
+}
+
 @media (min-width: 720px) {
   .app-shell {
     flex-direction: row;
   }
 
   .bottom-nav {
-    position: static;
+    order: 1;
     flex-direction: column;
     width: 216px;
     border-top: none;
     border-right: 1px solid var(--glass-border);
     padding: 20px 12px;
-    height: 100vh;
+    height: 100%;
+    overflow-y: auto;
     gap: 4px;
+  }
+
+  .app-content-column {
+    order: 2;
   }
 
   .bottom-nav-item {
@@ -1254,13 +1294,13 @@ a {
   color: var(--text-dim);
 }
 
-.verdict-critical { background: var(--danger-bg); border-color: rgba(220, 38, 38, 0.25); }
+.verdict-critical { background: var(--danger-bg); border-color: var(--danger); }
 .verdict-critical .verdict-text { color: var(--danger); }
-.verdict-warning { background: var(--warning-bg); border-color: rgba(180, 83, 9, 0.25); }
+.verdict-warning { background: var(--warning-bg); border-color: var(--warning); }
 .verdict-warning .verdict-text { color: var(--warning); }
-.verdict-success { background: var(--success-bg); border-color: rgba(22, 163, 74, 0.25); }
+.verdict-success { background: var(--success-bg); border-color: var(--success); }
 .verdict-success .verdict-text { color: var(--success); }
-.verdict-info { background: var(--info-bg); border-color: rgba(30, 58, 95, 0.2); }
+.verdict-info { background: var(--info-bg); border-color: var(--info); }
 .verdict-info .verdict-text { color: var(--info); }
 .verdict-neutral { background: var(--surface-2); }
 

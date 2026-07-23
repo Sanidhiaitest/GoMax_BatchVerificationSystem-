@@ -15,6 +15,7 @@ export interface FormulationMaterial {
   sort_order: number
   active: boolean
   requires_photo: boolean
+  standard_quantity: number | null
 }
 
 export type SupervisorRole = 'supervisor' | 'tester'

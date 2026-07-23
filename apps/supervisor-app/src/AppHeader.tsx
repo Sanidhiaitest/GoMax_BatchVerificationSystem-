@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Avatar from './Avatar'
 import { GoMaxWordmark } from './GoMaxLogo'
 
@@ -39,21 +40,31 @@ export default function AppHeader({
         </button>
       </header>
 
-      {confirmingLogout && (
-        <div className="confirm-popup-backdrop" onClick={() => setConfirmingLogout(false)}>
-          <div className="confirm-popup" onClick={(e) => e.stopPropagation()}>
-            <p className="confirm-popup-title">Are you sure you want to logout?</p>
-            <div className="confirm-popup-actions">
-              <button className="btn btn-danger" onClick={handleLogout}>
-                Logout
-              </button>
-              <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
-                No
-              </button>
+      {confirmingLogout &&
+        createPortal(
+          // Rendered straight onto document.body, not inside .screen — if it
+          // were nested inside .screen, that element's own transform-based
+          // entrance animation would make IT the containing block for this
+          // fixed-position popup instead of the viewport (any ancestor with
+          // a transform does this to position:fixed descendants), so the
+          // popup would center on the full scrollable page height rather
+          // than what's actually visible on screen. A portal sidesteps the
+          // problem entirely regardless of what CSS any ancestor ever has.
+          <div className="confirm-popup-backdrop" onClick={() => setConfirmingLogout(false)}>
+            <div className="confirm-popup" onClick={(e) => e.stopPropagation()}>
+              <p className="confirm-popup-title">Are you sure you want to logout?</p>
+              <div className="confirm-popup-actions">
+                <button className="btn btn-danger" onClick={handleLogout}>
+                  Logout
+                </button>
+                <button className="btn btn-ghost" onClick={() => setConfirmingLogout(false)}>
+                  No
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { materialIcon } from '../materialIcon'
@@ -164,26 +165,32 @@ export default function BatchChecklist() {
         </div>
       )}
 
-      {showSubmitConfirm && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <p className="modal-title">Submit batch?</p>
-            <p className="modal-body">Once submitted this record is locked and cannot be edited.</p>
-            <div className="modal-actions">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setShowSubmitConfirm(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                {submitting ? 'Submitting…' : 'Yes, submit'}
-              </button>
+      {showSubmitConfirm &&
+        createPortal(
+          // Portal to document.body — .checklist-screen has its own
+          // transform-based entrance animation, which would otherwise
+          // become this fixed-position modal's containing block instead
+          // of the viewport.
+          <div className="modal-backdrop">
+            <div className="modal">
+              <p className="modal-title">Submit batch?</p>
+              <p className="modal-body">Once submitted this record is locked and cannot be edited.</p>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setShowSubmitConfirm(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? 'Submitting…' : 'Yes, submit'}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
