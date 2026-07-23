@@ -1507,6 +1507,127 @@ a {
   color: var(--text);
 }
 
+/* Production health + Activity today infographics */
+.health-chart-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .health-chart-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.health-panel,
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.health-panel-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.health-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.health-bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.health-bar-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.health-bar-value {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.health-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.health-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.health-bar-fill-success { background: var(--success); }
+.health-bar-fill-live { background: var(--live); }
+.health-bar-fill-accent { background: var(--accent); }
+
+.hour-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1;
+}
+
+.hour-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.hour-bar-track {
+  width: 100%;
+  max-width: 22px;
+  height: 70px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 5px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.hour-bar-fill {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 5px 5px 0 0;
+  background: var(--accent);
+  transition: height 0.4s ease;
+}
+
+.hour-bar-label {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 /* Severity-tinted chips for the Needs attention filter row */
 .chip-critical.chip-active {
   background: var(--danger);

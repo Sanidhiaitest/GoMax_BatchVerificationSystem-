@@ -121,6 +121,40 @@ export default function Overview() {
     [batches],
   )
 
+  // Real, computed-from-data health metrics — no fabricated trend data.
+  const tested = useMemo(() => batches.filter((b) => b.testing_status === 'passed' || b.testing_status === 'failed'), [batches])
+  const passRate = tested.length > 0 ? Math.round((tested.filter((b) => b.testing_status === 'passed').length / tested.length) * 100) : null
+  const cleanRate =
+    batches.length > 0
+      ? Math.round((batches.filter((b) => b.batch_flags.length === 0 && b.testing_status !== 'failed').length / batches.length) * 100)
+      : null
+  const completionRate =
+    doneToday.length + mixing.length > 0 ? Math.round((doneToday.length / (doneToday.length + mixing.length)) * 100) : null
+
+  // Real activity-by-time-of-day chart — batches actually started today,
+  // bucketed into 4-hour windows from their real started_at timestamp.
+  const HOUR_BUCKETS = [
+    { label: '12–4am', from: 0, to: 4 },
+    { label: '4–8am', from: 4, to: 8 },
+    { label: '8–12pm', from: 8, to: 12 },
+    { label: '12–4pm', from: 12, to: 16 },
+    { label: '4–8pm', from: 16, to: 20 },
+    { label: '8–12am', from: 20, to: 24 },
+  ]
+  const todaysBatches = useMemo(() => batches.filter((b) => b.batch_date === today()), [batches])
+  const hourCounts = useMemo(
+    () =>
+      HOUR_BUCKETS.map((bucket) => ({
+        ...bucket,
+        count: todaysBatches.filter((b) => {
+          const h = new Date(b.started_at).getHours()
+          return h >= bucket.from && h < bucket.to
+        }).length,
+      })),
+    [todaysBatches],
+  )
+  const maxHourCount = Math.max(1, ...hourCounts.map((h) => h.count))
+
   const now = new Date()
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -184,6 +218,32 @@ export default function Overview() {
               <p className="ai-insight-text">
                 {insightLoading ? 'Reading the floor…' : insight ?? 'No insight available right now.'}
               </p>
+            </div>
+          </div>
+
+          <div className="health-chart-row">
+            <div className="health-panel">
+              <span className="health-panel-title">Production health</span>
+              <HealthBar label="Test pass rate" value={passRate} tone="success" />
+              <HealthBar label="Clean batches" value={cleanRate} tone="live" />
+              <HealthBar label="Today's completion" value={completionRate} tone="accent" />
+            </div>
+
+            <div className="chart-panel">
+              <span className="health-panel-title">Activity today</span>
+              <div className="hour-chart">
+                {hourCounts.map((h) => (
+                  <div key={h.label} className="hour-bar-col">
+                    <div className="hour-bar-track">
+                      <div
+                        className="hour-bar-fill"
+                        style={{ height: `${Math.max(3, (h.count / maxHourCount) * 70)}px` }}
+                      />
+                    </div>
+                    <span className="hour-bar-label">{h.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -269,6 +329,28 @@ export default function Overview() {
           </section>
         </>
       )}
+    </div>
+  )
+}
+
+function HealthBar({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: number | null
+  tone: 'success' | 'live' | 'accent'
+}) {
+  return (
+    <div className="health-bar-row">
+      <div className="health-bar-head">
+        <span className="health-bar-label">{label}</span>
+        <span className="health-bar-value">{value === null ? '—' : `${value}%`}</span>
+      </div>
+      <div className="health-bar-track">
+        <div className={`health-bar-fill health-bar-fill-${tone}`} style={{ width: `${value ?? 0}%` }} />
+      </div>
     </div>
   )
 }
