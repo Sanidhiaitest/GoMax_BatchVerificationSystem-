@@ -27,6 +27,15 @@ export function avatarColors(name: string): { bg: string; fg: string } {
   return { bg, fg }
 }
 
+// How many illustrated worker avatars live in public/avatars/ (1.png..N.png)
+// — same set as the supervisor app, copied over so both apps show the same
+// character for a given person.
+const AVATAR_IMAGE_COUNT = 6
+
+export function avatarImageSrc(name: string): string {
+  return `/avatars/${(hash(name) % AVATAR_IMAGE_COUNT) + 1}.png`
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()

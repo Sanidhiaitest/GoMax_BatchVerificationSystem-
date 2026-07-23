@@ -363,7 +363,8 @@ a {
   align-self: flex-start;
 }
 
-/* Avatar (stand-in for material/formulation photography) */
+/* Avatar (stand-in for material/formulation photography, or an
+   illustrated worker avatar when person=true) */
 .avatar {
   border-radius: 999px;
   display: inline-flex;
@@ -372,6 +373,11 @@ a {
   font-weight: 800;
   flex-shrink: 0;
   letter-spacing: -0.02em;
+}
+
+.avatar-photo {
+  object-fit: cover;
+  background: var(--surface-2);
 }
 
 /* Fields / forms */

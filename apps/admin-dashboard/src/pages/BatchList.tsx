@@ -58,6 +58,7 @@ export default function BatchList() {
 
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
   const [personSheetOpen, setPersonSheetOpen] = useState(false)
+  const [testerSheetOpen, setTesterSheetOpen] = useState(false)
 
   function toggleFormulation(id: string) {
     setFormulationFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -164,13 +165,23 @@ export default function BatchList() {
               <IconChevronDown size={13} />
             </button>
             <button
-              className={`filter-trigger ${supervisorFilters.length + testerFilters.length > 0 ? 'has-value' : ''}`}
+              className={`filter-trigger ${supervisorFilters.length > 0 ? 'has-value' : ''}`}
               onClick={() => setPersonSheetOpen(true)}
             >
               <IconUsers size={15} />
-              {supervisorFilters.length + testerFilters.length > 0
-                ? `Person · ${supervisorFilters.length + testerFilters.length}`
-                : 'Person & tester'}
+              {supervisorFilters.length > 0
+                ? mixers.filter((s) => supervisorFilters.includes(s.id)).map((s) => s.name).join(', ')
+                : 'Person'}
+              <IconChevronDown size={13} />
+            </button>
+            <button
+              className={`filter-trigger ${testerFilters.length > 0 ? 'has-value' : ''}`}
+              onClick={() => setTesterSheetOpen(true)}
+            >
+              <IconUsers size={15} />
+              {testerFilters.length > 0
+                ? testers.filter((t) => testerFilters.includes(t.id)).map((t) => t.name).join(', ')
+                : 'Tester'}
               <IconChevronDown size={13} />
             </button>
           </div>
@@ -229,41 +240,35 @@ export default function BatchList() {
         )}
       </CenterPopup>
 
-      <BottomSheet open={personSheetOpen} onClose={() => setPersonSheetOpen(false)} title="Person & tester">
-        {mixers.length > 0 && (
-          <>
-            <p className="sheet-section-label">Person</p>
-            {mixers.map((s) => (
-              <CheckRow
-                key={s.id}
-                label={s.name}
-                checked={supervisorFilters.includes(s.id)}
-                onToggle={() => toggleSupervisor(s.id)}
-              />
-            ))}
-          </>
+      <BottomSheet open={personSheetOpen} onClose={() => setPersonSheetOpen(false)} title="Person">
+        {mixers.map((s) => (
+          <CheckRow
+            key={s.id}
+            label={s.name}
+            checked={supervisorFilters.includes(s.id)}
+            onToggle={() => toggleSupervisor(s.id)}
+            showAvatar
+          />
+        ))}
+        {supervisorFilters.length > 0 && (
+          <button className="link-btn" onClick={() => setSupervisorFilters([])}>
+            Clear
+          </button>
         )}
-        {testers.length > 0 && (
-          <>
-            <p className="sheet-section-label">Tester</p>
-            {testers.map((t) => (
-              <CheckRow
-                key={t.id}
-                label={t.name}
-                checked={testerFilters.includes(t.id)}
-                onToggle={() => toggleTester(t.id)}
-              />
-            ))}
-          </>
-        )}
-        {(supervisorFilters.length > 0 || testerFilters.length > 0) && (
-          <button
-            className="link-btn"
-            onClick={() => {
-              setSupervisorFilters([])
-              setTesterFilters([])
-            }}
-          >
+      </BottomSheet>
+
+      <BottomSheet open={testerSheetOpen} onClose={() => setTesterSheetOpen(false)} title="Tester">
+        {testers.map((t) => (
+          <CheckRow
+            key={t.id}
+            label={t.name}
+            checked={testerFilters.includes(t.id)}
+            onToggle={() => toggleTester(t.id)}
+            showAvatar
+          />
+        ))}
+        {testerFilters.length > 0 && (
+          <button className="link-btn" onClick={() => setTesterFilters([])}>
             Clear
           </button>
         )}

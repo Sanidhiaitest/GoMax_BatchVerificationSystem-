@@ -144,7 +144,7 @@ function PersonGroup({
           {people.map((s) => (
             <div key={s.id} className="list-item batch-row">
               <div className="batch-row-left">
-                <Avatar name={s.name} />
+                <Avatar name={s.name} person />
                 <span className="list-item-code">
                   {s.name} {!s.active && <span className="hint-text">(inactive)</span>}
                 </span>

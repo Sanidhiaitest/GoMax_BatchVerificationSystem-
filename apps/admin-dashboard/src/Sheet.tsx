@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import Avatar from './Avatar'
 
 // Bottom sheet — slides up from the bottom, portaled to document.body so
 // it's never affected by any ancestor's transform/overflow.
@@ -66,14 +67,17 @@ export function CheckRow({
   label,
   checked,
   onToggle,
+  showAvatar = false,
 }: {
   label: string
   checked: boolean
   onToggle: () => void
+  showAvatar?: boolean
 }) {
   return (
     <button type="button" className={`check-row ${checked ? 'checked' : ''}`} onClick={onToggle}>
       <span className="check-row-box">{checked && '✓'}</span>
+      {showAvatar && <Avatar name={label} size={28} person />}
       {label}
     </button>
   )
