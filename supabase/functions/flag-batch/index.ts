@@ -161,7 +161,7 @@ ${JSON.stringify(summarizeHistory(supervisorHistory), null, 2)}
 Recent submitted batches for formulation ${formulationCode} (any supervisor), most recent first:
 ${JSON.stringify(summarizeHistory(formulationHistory), null, 2)}
 
-Respond with ONLY a JSON array (no prose, no markdown fences) of flags to raise. Each element must be: {"severity": "info"|"warning"|"critical", "code": "short_snake_case_code", "message": "one or two plain-language sentences a plant manager can read on their phone explaining what looks off and why"}. If nothing looks unusual, respond with an empty array: [].`;
+Respond with ONLY a JSON array (no prose, no markdown fences) of flags to raise. Each element must be: {"severity": "info"|"warning"|"critical", "code": "short_snake_case_code", "message": "ONE short, crisp phrase — 10 words or fewer, plant-floor plain language, no filler words, state only what looks off (not why or what to do about it). Someone skimming a phone screen must get it in under a second. Example good message: 'SNFC added but quantity is 0'. Example bad message: a full sentence explaining the reasoning."}. If nothing looks unusual, respond with an empty array: [].`;
 
   let flags: FlagResult[] = [];
   try {

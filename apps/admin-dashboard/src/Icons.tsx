@@ -158,6 +158,15 @@ export function IconChevronDown({ size = 16 }: IconProps) {
   )
 }
 
+export function IconFlag({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3v18" />
+      <path d="M5 4h11l-2.5 4L16 12H5" />
+    </svg>
+  )
+}
+
 export function IconChevronRight({ size = 16 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

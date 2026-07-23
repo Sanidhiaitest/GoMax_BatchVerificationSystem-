@@ -861,29 +861,30 @@ a {
   font-weight: 700;
 }
 
-.flag-card {
-  border-left: 4px solid var(--text-dim);
-  border-radius: var(--radius-sm);
-  padding: 12px 15px;
-  box-shadow: var(--shadow-sm);
-  background: var(--glass);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+/* A plain row with a colored left accent, not a floating card — flows
+   directly in the sheet instead of stacking its own box/shadow. Named
+   flag-row-* (not severity-*) so it can't collide with the unrelated
+   bare .severity-critical/.warning/.info rules used by the small pill
+   badge, which would otherwise paint the whole row's background. */
+.flag-row {
+  border-left: 3px solid var(--text-dim);
+  padding: 4px 0 4px 12px;
+  background: transparent;
 }
 
-.flag-card.severity-critical {
+.flag-row-critical {
   border-left-color: var(--danger);
 }
 
-.flag-card.severity-warning {
+.flag-row-warning {
   border-left-color: var(--warning);
 }
 
-.flag-card.severity-info {
+.flag-row-info {
   border-left-color: var(--info);
 }
 
-.flag-card-head {
+.flag-row-head {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1925,34 +1926,60 @@ a {
   white-space: nowrap;
 }
 
-/* Outlined pill + dot (not a filled badge, not a border-stroke around the
-   whole card) — the one overall verdict to glance at. */
-.status-pill-outline {
+/* Soft filled pill — production stage only (Mixing/Awaiting test/Passed/
+   etc). A solid tint reads more clearly than an outline/stroke to
+   someone skimming quickly, and flags are shown separately now instead
+   of overriding this. */
+.status-pill-soft {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   padding: 5px 12px;
   border-radius: 999px;
-  border: 1.5px solid currentColor;
   font-size: 12px;
   font-weight: 700;
 }
 
-.status-pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
+.status-pill-soft-live { background: var(--info-bg); color: var(--info); }
+.status-pill-soft-success { background: var(--success-bg); color: var(--success); }
+.status-pill-soft-warning { background: var(--warning-bg); color: var(--warning); }
+.status-pill-soft-critical { background: var(--danger-bg); color: var(--danger); }
+.status-pill-soft-info { background: var(--accent-bg); color: var(--accent); }
+.status-pill-soft-muted { background: var(--surface-2); color: var(--text-dim); }
+
+/* Flag indicator — a small filled flag icon badge in the corner, not a
+   pill of text or an outline around the card, since a flag icon reads
+   instantly without having to parse a word. */
+.batch-card-flag-badge {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  justify-content: center;
 }
 
-.status-pill-outline-live { color: var(--info); }
-.status-pill-outline-success { color: var(--success); }
-.status-pill-outline-warning { color: var(--warning); }
-.status-pill-outline-critical { color: var(--danger); }
-.status-pill-outline-info { color: var(--accent); }
-.status-pill-outline-muted { color: var(--text-dim); }
+.batch-card-flag-badge-critical { background: var(--danger); color: #fff; }
+.batch-card-flag-badge-warning { background: var(--warning); color: #fff; }
+.batch-card-flag-badge-info { background: var(--accent); color: #fff; }
+
+.batch-card-flag-count {
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.batch-card-flag-message {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .batch-card-stats {
   display: flex;
@@ -2038,19 +2065,44 @@ a {
 }
 
 /* ===================================================================
-   Batch detail — clear hierarchy: dark identity hero, a single verdict
-   banner (the one thing to know), then evidence, flags, materials and a
-   compact timeline last.
+   Batch detail — a seamless page, not a stack of separately-boxed
+   widgets: a full-bleed dark identity hero, then one continuous sheet
+   underneath (verdict, evidence, flags, materials, timeline) separated
+   by spacing/dividers rather than individual card borders/shadows, same
+   language as the supervisor app's tester-hero/tester-sheet screens.
    =================================================================== */
-.detail-hero {
+.batch-detail-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-hero-full {
   background: linear-gradient(135deg, #0a1628, #1e3a5f);
-  border-radius: var(--radius);
-  padding: 20px;
+  padding: 18px 16px 26px;
   color: #fff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: var(--shadow-md);
+  gap: 10px;
+}
+
+.detail-hero-back {
+  align-self: flex-start;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0;
+}
+
+.detail-sheet {
+  background: var(--bg);
+  border-radius: 22px 22px 0 0;
+  margin: -16px auto 0;
+  max-width: 760px;
+  width: 100%;
+  padding: 22px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
 }
 
 .detail-hero-row {
@@ -2100,14 +2152,14 @@ a {
   color: #4ade80;
 }
 
-/* Verdict banner */
+/* Verdict banner — a soft color block, not a bordered card, so it reads
+   as emphasis within the flowing sheet rather than another stacked box. */
 .verdict {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
 }
 
 .verdict-icon {
@@ -2136,27 +2188,15 @@ a {
   color: var(--text-dim);
 }
 
-.verdict-critical { background: var(--danger-bg); border-color: var(--danger); }
+.verdict-critical { background: var(--danger-bg); }
 .verdict-critical .verdict-text { color: var(--danger); }
-.verdict-warning { background: var(--warning-bg); border-color: var(--warning); }
+.verdict-warning { background: var(--warning-bg); }
 .verdict-warning .verdict-text { color: var(--warning); }
-.verdict-success { background: var(--success-bg); border-color: var(--success); }
+.verdict-success { background: var(--success-bg); }
 .verdict-success .verdict-text { color: var(--success); }
-.verdict-info { background: var(--info-bg); border-color: var(--info); }
+.verdict-info { background: var(--info-bg); }
 .verdict-info .verdict-text { color: var(--info); }
 .verdict-neutral { background: var(--surface-2); }
-
-/* Detail card (lab result container) */
-.detail-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-sm);
-}
 
 .detail-card-head {
   display: flex;
@@ -2181,105 +2221,104 @@ a {
   gap: 10px;
 }
 
-/* Compact timeline (flat, not big stat cards) */
-/* Vertical timeline — a connected line of nodes instead of a grid of
-   disconnected stat boxes, so the batch's life reads as a sequence. */
-.v-timeline {
+/* Horizontal timeline — nodes connected left-to-right by a line, like a
+   shipment tracker, instead of a grid of disconnected stat boxes or a
+   vertical list. Reads at a glance without scrolling. */
+.h-timeline {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
 }
 
-.v-timeline-step {
-  display: flex;
-  gap: 14px;
-}
-
-.v-timeline-rail {
+.h-timeline-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 14px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
 }
 
-.v-timeline-node {
+.h-timeline-rail {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.h-timeline-node {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 2.5px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
-  margin-top: 2px;
   box-sizing: border-box;
 }
 
-.v-timeline-line {
-  width: 2px;
+.h-timeline-line {
+  height: 2px;
   flex: 1;
-  min-height: 26px;
   background: var(--border);
-  margin: 3px 0;
+  margin: 0 3px;
 }
 
-.v-timeline-step-done .v-timeline-node {
+.h-timeline-step-done .h-timeline-node {
   border-color: var(--accent);
   background: var(--accent);
 }
 
-.v-timeline-step-done .v-timeline-line {
+.h-timeline-step-done .h-timeline-line {
   background: var(--accent);
 }
 
-.v-timeline-step-active .v-timeline-node {
+.h-timeline-step-active .h-timeline-node {
   border-color: var(--info);
   background: var(--surface);
   box-shadow: 0 0 0 3px var(--info-bg);
 }
 
-.v-timeline-node-success {
+.h-timeline-node-success {
   border-color: var(--success) !important;
   background: var(--success) !important;
 }
 
-.v-timeline-node-critical {
+.h-timeline-node-critical {
   border-color: var(--danger) !important;
   background: var(--danger) !important;
 }
 
-.v-timeline-body {
+.h-timeline-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
-  padding-bottom: 22px;
+  text-align: center;
+  padding: 0 2px;
 }
 
-.v-timeline-step:last-child .v-timeline-body {
-  padding-bottom: 0;
-}
-
-.v-timeline-label {
-  font-size: 13.5px;
+.h-timeline-label {
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--text);
+  line-height: 1.25;
 }
 
-.v-timeline-step-pending .v-timeline-label {
+.h-timeline-step-pending .h-timeline-label {
   color: var(--text-dim);
   font-weight: 600;
 }
 
-.v-timeline-time {
-  font-size: 12px;
+.h-timeline-time {
+  font-size: 10.5px;
   color: var(--text-dim);
   font-weight: 600;
 }
 
-.v-timeline-time-pending {
+.h-timeline-time-pending {
   font-style: italic;
 }
 
-.v-timeline-sub {
-  font-size: 11.5px;
+.h-timeline-sub {
+  font-size: 10px;
   color: var(--accent-dim);
   font-weight: 600;
 }

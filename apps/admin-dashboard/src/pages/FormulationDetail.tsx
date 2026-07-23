@@ -86,7 +86,7 @@ function ProductionLog({ formulationId }: { formulationId: string }) {
       const { data, error } = await supabase
         .from('batches')
         .select(
-          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity)',
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity, message)',
         )
         .eq('formulation_id', formulationId)
         .order('started_at', { ascending: false })

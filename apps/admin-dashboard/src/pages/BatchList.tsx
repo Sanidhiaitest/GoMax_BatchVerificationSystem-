@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import { BottomSheet, CenterPopup, CheckRow } from '../Sheet'
-import { IconCalendar, IconUsers, IconProducts, IconChevronDown, IconChevronRight, IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
+import { IconCalendar, IconUsers, IconProducts, IconChevronDown, IconChevronRight, IconMixing, IconTesting, IconAlert, IconCheck, IconFlag } from '../Icons'
 import type { ReactNode } from 'react'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
@@ -102,7 +102,7 @@ export default function BatchList() {
       let query = supabase
         .from('batches')
         .select(
-          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity)',
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity, message)',
         )
         .order('started_at', { ascending: false })
         .limit(200)
@@ -325,13 +325,18 @@ export function BatchRow({ batch }: { batch: BatchListRow }) {
         'info' as string,
       )
     : null
+  const worstMessage = flagCount
+    ? batch.batch_flags.reduce((worst, f) =>
+        SEVERITY_RANK[f.severity] < SEVERITY_RANK[worst.severity] ? f : worst,
+      ).message
+    : null
 
-  // One overall verdict pill — the single thing to glance at — separate
-  // from the Prep/Test breakdown underneath, same hierarchy as the batch
-  // detail page's verdict banner.
-  const verdict: { label: string; tone: string } = (() => {
+  // The stage pill always shows where the batch actually is in production
+  // (mixing/awaiting test/passed/etc) — flags are a separate, orthogonal
+  // signal shown as their own badge, not something that overrides the
+  // stage the way it used to.
+  const stage: { label: string; tone: string } = (() => {
     if (batch.testing_status === 'failed') return { label: 'Test failed', tone: 'critical' }
-    if (worstSeverity) return { label: `${flagCount} flag${flagCount > 1 ? 's' : ''}`, tone: worstSeverity }
     if (batch.status === 'in_progress') return { label: 'Mixing', tone: 'live' }
     if (batch.testing_status === 'passed') return { label: 'Passed QC', tone: 'success' }
     if (batch.testing_status === 'pending') return { label: 'Awaiting test', tone: 'info' }
@@ -362,6 +367,8 @@ export function BatchRow({ batch }: { batch: BatchListRow }) {
       ? Math.round((new Date(batch.submitted_at).getTime() - new Date(batch.started_at).getTime()) / 60000)
       : null
 
+  const names = [batch.supervisors?.name, batch.tester?.name].filter(Boolean).join(' · ')
+
   return (
     <Link to={`/batch/${batch.id}`} className="batch-card">
       <div className="batch-card-top">
@@ -370,17 +377,19 @@ export function BatchRow({ batch }: { batch: BatchListRow }) {
           <span className="batch-card-title">
             {batch.formulations?.code} · #{batch.batch_number}
           </span>
-          <span className="batch-card-subtitle">
-            by {batch.supervisors?.name}
-            {batch.tester && ` · tested by ${batch.tester.name}`}
-          </span>
+          {names && <span className="batch-card-subtitle">{names}</span>}
         </div>
+        {flagCount > 0 && (
+          <span className={`batch-card-flag-badge batch-card-flag-badge-${worstSeverity}`} title={`${flagCount} flag${flagCount > 1 ? 's' : ''}`}>
+            <IconFlag size={12} />
+            {flagCount > 1 && <span className="batch-card-flag-count">{flagCount}</span>}
+          </span>
+        )}
       </div>
 
-      <span className={`status-pill-outline status-pill-outline-${verdict.tone}`}>
-        <span className="status-pill-dot" />
-        {verdict.label}
-      </span>
+      <span className={`status-pill-soft status-pill-soft-${stage.tone}`}>{stage.label}</span>
+
+      {worstMessage && <p className="batch-card-flag-message">{worstMessage}</p>}
 
       <div className="batch-card-stats">
         <div className="batch-card-stat">

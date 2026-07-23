@@ -102,13 +102,13 @@ export default function BatchDetail() {
   })()
 
   return (
-    <div className="page">
-      <Link to="/batches" className="link-btn back-btn">
-        ← Back to batches
-      </Link>
-
-      {/* Identity */}
-      <div className="detail-hero">
+    <div className="batch-detail-page">
+      {/* Identity — full-bleed dark hero, same language as the tester
+          app's batch screen, instead of a floating card. */}
+      <div className="detail-hero-full">
+        <Link to="/batches" className="link-btn back-btn detail-hero-back">
+          ← Back to batches
+        </Link>
         <div className="detail-hero-row">
           <div>
             <span className="detail-hero-number">#{batch.batch_number}</span>
@@ -123,120 +123,125 @@ export default function BatchDetail() {
         </span>
       </div>
 
-      {/* Verdict — the one thing to know */}
-      <div className={`verdict verdict-${verdict.tone}`}>
-        <span className="verdict-icon">{verdict.icon}</span>
-        <div>
-          <span className="verdict-text">{verdict.text}</span>
-          <span className="verdict-sub">{verdict.sub}</span>
+      {/* Everything below is one continuous sheet — sections are
+          separated by dividers/spacing, not individually boxed cards. */}
+      <div className="detail-sheet">
+        {/* Verdict — the one thing to know */}
+        <div className={`verdict verdict-${verdict.tone}`}>
+          <span className="verdict-icon">{verdict.icon}</span>
+          <div>
+            <span className="verdict-text">{verdict.text}</span>
+            <span className="verdict-sub">{verdict.sub}</span>
+          </div>
         </div>
-      </div>
 
-      {/* Lab result (with photo) — high in the hierarchy when present */}
-      {batch.testing_status !== 'not_sent' && <LabTestingSection batch={batch} />}
+        {/* Lab result (with photo) — high in the hierarchy when present */}
+        {batch.testing_status !== 'not_sent' && <LabTestingSection batch={batch} />}
 
-      {/* Flags */}
-      {flags.length > 0 && (
-        <section>
-          <h2 className="section-title">Flags · {flags.length}</h2>
-          <div className="detail-stack">
-            {flags.map((f) => (
-              <div key={f.id} className={`flag-card severity-${f.severity}`}>
-                <div className="flag-card-head">
-                  <span className={`severity-badge severity-${f.severity}`}>{f.severity}</span>
-                  <span className="hint-text">{f.source === 'ai' ? 'AI review' : 'Rule check'}</span>
+        {/* Flags */}
+        {flags.length > 0 && (
+          <section>
+            <h2 className="section-title">Flags · {flags.length}</h2>
+            <div className="detail-stack">
+              {flags.map((f) => (
+                <div key={f.id} className={`flag-row flag-row-${f.severity}`}>
+                  <div className="flag-row-head">
+                    <span className={`severity-badge severity-${f.severity}`}>{f.severity}</span>
+                    <span className="hint-text">{f.source === 'ai' ? 'AI review' : 'Rule check'}</span>
+                  </div>
+                  <p className="flag-message">{f.message}</p>
                 </div>
-                <p className="flag-message">{f.message}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Materials */}
+        <section>
+          <h2 className="section-title">
+            Materials
+            <span className="hint-text">
+              {addedCount} added · {skippedCount} skipped{pendingCount > 0 ? ` · ${pendingCount} not marked` : ''}
+            </span>
+          </h2>
+          <div className="table-scroll">
+            <table className="materials-table">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Qty</th>
+                  <th>Status</th>
+                  <th>Photo</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {materials.map((m) => (
+                  <tr key={m.id} className={m.suspicious ? 'row-suspicious' : ''}>
+                    <td className="materials-table-desc">
+                      <Avatar name={m.description} size={26} />
+                      {m.description}
+                    </td>
+                    <td>{m.quantity ?? '—'}</td>
+                    <td>
+                      <span className={`table-symbol table-symbol-${m.status}`}>
+                        {m.status === 'added' ? '✓' : m.status === 'skipped' ? '✗' : '—'}
+                      </span>
+                      {m.suspicious && <span className="suspicious-badge"> ⚠</span>}
+                    </td>
+                    <td>
+                      {m.photo_path ? (
+                        <MaterialPhotoLink path={m.photo_path} />
+                      ) : m.requires_photo ? (
+                        <span className="hint-text">—</span>
+                      ) : (
+                        <span className="hint-text">n/a</span>
+                      )}
+                    </td>
+                    <td className="hint-text">
+                      {m.ticked_at ? new Date(m.ticked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
-      )}
 
-      {/* Materials */}
-      <section>
-        <h2 className="section-title">
-          Materials
-          <span className="hint-text">
-            {addedCount} added · {skippedCount} skipped{pendingCount > 0 ? ` · ${pendingCount} not marked` : ''}
-          </span>
-        </h2>
-        <div className="table-scroll">
-          <table className="materials-table">
-            <thead>
-              <tr>
-                <th>Material</th>
-                <th>Qty</th>
-                <th>Status</th>
-                <th>Photo</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {materials.map((m) => (
-                <tr key={m.id} className={m.suspicious ? 'row-suspicious' : ''}>
-                  <td className="materials-table-desc">
-                    <Avatar name={m.description} size={26} />
-                    {m.description}
-                  </td>
-                  <td>{m.quantity ?? '—'}</td>
-                  <td>
-                    <span className={`table-symbol table-symbol-${m.status}`}>
-                      {m.status === 'added' ? '✓' : m.status === 'skipped' ? '✗' : '—'}
-                    </span>
-                    {m.suspicious && <span className="suspicious-badge"> ⚠</span>}
-                  </td>
-                  <td>
-                    {m.photo_path ? (
-                      <MaterialPhotoLink path={m.photo_path} />
-                    ) : m.requires_photo ? (
-                      <span className="hint-text">—</span>
-                    ) : (
-                      <span className="hint-text">n/a</span>
-                    )}
-                  </td>
-                  <td className="hint-text">
-                    {m.ticked_at ? new Date(m.ticked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Timeline — the batch's life as a sequence of steps, not a grid
-          of disconnected stat boxes. Steps not reached yet stay visible
-          but dimmed, so the whole expected journey is always in view. */}
-      <section>
-        <h2 className="section-title">Timeline</h2>
-        <VTimeline
-          steps={[
-            { label: 'Started', time: clock(batch.started_at), state: 'done' },
-            batch.status === 'submitted'
-              ? {
-                  label: 'Submitted',
-                  time: clock(batch.submitted_at),
-                  state: 'done',
-                  sub: duration !== null ? `Mixed for ${duration}m` : undefined,
-                }
-              : { label: 'Submitted', time: null, state: 'pending' },
-            batch.sent_for_testing_at
-              ? { label: 'Sent to lab', time: clock(batch.sent_for_testing_at), state: 'done' }
-              : { label: 'Sent to lab', time: null, state: 'pending' },
-            batch.testing_completed_at
-              ? {
-                  label: batch.testing_status === 'failed' ? 'Failed test' : 'Passed test',
-                  time: clock(batch.testing_completed_at),
-                  state: 'done',
-                  tone: batch.testing_status === 'failed' ? 'critical' : 'success',
-                }
-              : batch.testing_started_at
-              ? { label: 'Testing in progress', time: clock(batch.testing_started_at), state: 'active' }
-              : { label: 'Tested', time: null, state: 'pending' },
-          ]}
-        />
-      </section>
+        {/* Timeline — the batch's life as a sequence of steps, not a grid
+            of disconnected stat boxes. Steps not reached yet stay visible
+            but dimmed, so the whole expected journey is always in view.
+            Horizontal so it reads left-to-right like a shipment tracker. */}
+        <section>
+          <h2 className="section-title">Timeline</h2>
+          <HTimeline
+            steps={[
+              { label: 'Started', time: clock(batch.started_at), state: 'done' },
+              batch.status === 'submitted'
+                ? {
+                    label: 'Submitted',
+                    time: clock(batch.submitted_at),
+                    state: 'done',
+                    sub: duration !== null ? `${duration}m mix` : undefined,
+                  }
+                : { label: 'Submitted', time: null, state: 'pending' },
+              batch.sent_for_testing_at
+                ? { label: 'Sent to lab', time: clock(batch.sent_for_testing_at), state: 'done' }
+                : { label: 'Sent to lab', time: null, state: 'pending' },
+              batch.testing_completed_at
+                ? {
+                    label: batch.testing_status === 'failed' ? 'Failed test' : 'Passed test',
+                    time: clock(batch.testing_completed_at),
+                    state: 'done',
+                    tone: batch.testing_status === 'failed' ? 'critical' : 'success',
+                  }
+                : batch.testing_started_at
+                ? { label: 'Testing', time: clock(batch.testing_started_at), state: 'active' }
+                : { label: 'Tested', time: null, state: 'pending' },
+            ]}
+          />
+        </section>
+      </div>
     </div>
   )
 }
@@ -249,25 +254,25 @@ interface TimelineStep {
   sub?: string
 }
 
-function VTimeline({ steps }: { steps: TimelineStep[] }) {
+function HTimeline({ steps }: { steps: TimelineStep[] }) {
   return (
-    <div className="v-timeline">
+    <div className="h-timeline">
       {steps.map((step, i) => (
-        <div key={step.label} className={`v-timeline-step v-timeline-step-${step.state}`}>
-          <div className="v-timeline-rail">
-            <span className={`v-timeline-node ${step.tone ? `v-timeline-node-${step.tone}` : ''}`} />
-            {i < steps.length - 1 && <span className="v-timeline-line" />}
+        <div key={step.label} className={`h-timeline-step h-timeline-step-${step.state}`}>
+          <div className="h-timeline-rail">
+            <span className={`h-timeline-node ${step.tone ? `h-timeline-node-${step.tone}` : ''}`} />
+            {i < steps.length - 1 && <span className="h-timeline-line" />}
           </div>
-          <div className="v-timeline-body">
-            <span className="v-timeline-label">{step.label}</span>
+          <div className="h-timeline-body">
+            <span className="h-timeline-label">{step.label}</span>
             {step.time ? (
-              <span className="v-timeline-time">{step.time}</span>
+              <span className="h-timeline-time">{step.time}</span>
             ) : (
-              <span className="v-timeline-time v-timeline-time-pending">
+              <span className="h-timeline-time h-timeline-time-pending">
                 {step.state === 'active' ? 'In progress' : 'Not yet'}
               </span>
             )}
-            {step.sub && <span className="v-timeline-sub">{step.sub}</span>}
+            {step.sub && <span className="h-timeline-sub">{step.sub}</span>}
           </div>
         </div>
       ))}
@@ -340,7 +345,7 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
   return (
     <section>
       <h2 className="section-title">Lab testing</h2>
-      <div className="detail-card">
+      <div className="detail-stack">
         <div className="detail-card-head">
           <span
             className={`status-pill status-${
@@ -366,7 +371,6 @@ function LabTestingSection({ batch }: { batch: BatchDetailData }) {
             <audio controls src={audioUrl} style={{ width: '100%' }} />
           </div>
         )}
-
       </div>
     </section>
   )
