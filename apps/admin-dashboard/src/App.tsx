@@ -6,6 +6,7 @@ import Overview from './pages/Overview'
 import BatchList from './pages/BatchList'
 import BatchDetail from './pages/BatchDetail'
 import Formulations from './pages/Formulations'
+import FormulationDetail from './pages/FormulationDetail'
 import Supervisors from './pages/Supervisors'
 
 function Gate({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="batches" element={<BatchList />} />
             <Route path="batch/:batchId" element={<BatchDetail />} />
             <Route path="formulations" element={<Formulations />} />
+            <Route path="formulations/:formulationId" element={<FormulationDetail />} />
             <Route path="supervisors" element={<Supervisors />} />
           </Route>
         </Routes>

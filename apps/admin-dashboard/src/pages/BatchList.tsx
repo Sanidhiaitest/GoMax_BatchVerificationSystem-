@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import { BottomSheet, CenterPopup, CheckRow } from '../Sheet'
-import { IconCalendar, IconUsers, IconProducts, IconChevronDown } from '../Icons'
+import { IconCalendar, IconUsers, IconProducts, IconChevronDown, IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
+import type { ReactNode } from 'react'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -18,12 +19,12 @@ function dateGroupLabel(dateStr: string): string {
 }
 
 // Quick status chips — the primary, click-first way to slice the list.
-const STATUS_CHIPS: { key: string; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'mixing', label: '🔵 Mixing' },
-  { key: 'awaiting', label: '🧪 Awaiting test' },
-  { key: 'attention', label: '⚠️ Attention' },
-  { key: 'today', label: '✓ Done today' },
+const STATUS_CHIPS: { key: string; label: string; icon: ReactNode }[] = [
+  { key: 'all', label: 'All', icon: null },
+  { key: 'mixing', label: 'Mixing', icon: <IconMixing size={13} /> },
+  { key: 'awaiting', label: 'Awaiting test', icon: <IconTesting size={13} /> },
+  { key: 'attention', label: 'Attention', icon: <IconAlert size={13} /> },
+  { key: 'today', label: 'Done today', icon: <IconCheck size={13} /> },
 ]
 
 function matchesStatus(b: BatchListRow & { submitted_at?: string | null }, status: string): boolean {
@@ -145,9 +146,10 @@ export default function BatchList() {
         {STATUS_CHIPS.map((c) => (
           <button
             key={c.key}
-            className={`chip ${statusChip === c.key ? 'chip-active' : ''}`}
+            className={`chip chip-with-icon ${statusChip === c.key ? 'chip-active' : ''}`}
             onClick={() => setStatusChip(c.key)}
           >
+            {c.icon}
             {c.label}
           </button>
         ))}

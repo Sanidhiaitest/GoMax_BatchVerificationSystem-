@@ -9,3 +9,4 @@ dist-ssr
 *.log
 .vercel
 apps/supervisor-app/public/products/manifest.json
+apps/admin-dashboard/public/products/manifest.json

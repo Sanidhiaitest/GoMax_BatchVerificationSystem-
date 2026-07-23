@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
+import { IconKey, IconPower } from '../Icons'
 import type { SupervisorPublic, SupervisorRole } from '../types'
 
 export default function Supervisors() {
@@ -149,11 +150,16 @@ function PersonGroup({
                   {s.name} {!s.active && <span className="hint-text">(inactive)</span>}
                 </span>
               </div>
-              <div className="material-editor-actions">
-                <button className="link-btn" onClick={() => onResetPin(s)}>
+              <div className="person-actions">
+                <button className="person-action-btn" onClick={() => onResetPin(s)}>
+                  <IconKey size={13} />
                   Reset PIN
                 </button>
-                <button className="link-btn" onClick={() => onToggleActive(s)}>
+                <button
+                  className={`person-action-btn ${s.active ? 'person-action-btn-danger' : 'person-action-btn-active'}`}
+                  onClick={() => onToggleActive(s)}
+                >
+                  <IconPower size={13} />
                   {s.active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
