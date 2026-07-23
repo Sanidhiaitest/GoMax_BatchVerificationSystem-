@@ -51,9 +51,12 @@ export default function BatchList() {
 
   const [dateFilter, setDateFilter] = useState('')
   const [supervisorFilter, setSupervisorFilter] = useState('')
-  const [formulationFilter, setFormulationFilter] = useState('')
+  const [formulationFilters, setFormulationFilters] = useState<string[]>([])
   const [testerFilter, setTesterFilter] = useState('')
-  const [workerFilter, setWorkerFilter] = useState('')
+
+  function toggleFormulation(id: string) {
+    setFormulationFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
 
   const mixers = useMemo(() => supervisors.filter((s) => s.role === 'supervisor'), [supervisors])
   const testers = useMemo(() => supervisors.filter((s) => s.role === 'tester'), [supervisors])
@@ -90,7 +93,7 @@ export default function BatchList() {
 
       if (dateFilter) query = query.eq('batch_date', dateFilter)
       if (supervisorFilter) query = query.eq('supervisor_id', supervisorFilter)
-      if (formulationFilter) query = query.eq('formulation_id', formulationFilter)
+      if (formulationFilters.length > 0) query = query.in('formulation_id', formulationFilters)
       if (testerFilter) query = query.eq('tester_id', testerFilter)
 
       const { data, error } = await query
@@ -102,37 +105,9 @@ export default function BatchList() {
     return () => {
       cancelled = true
     }
-  }, [dateFilter, supervisorFilter, formulationFilter, testerFilter])
+  }, [dateFilter, supervisorFilter, formulationFilters, testerFilter])
 
-  // On-floor workers (batch.mason_name) are a free-text, comma-separated
-  // field — distinct from the supervisor who logged the batch in — so they
-  // need their own filter, built from whoever actually shows up in the data.
-  const workerOptions = useMemo(() => {
-    const names = new Set<string>()
-    batches.forEach((b) =>
-      b.mason_name
-        .split(',')
-        .map((n) => n.trim())
-        .filter(Boolean)
-        .forEach((n) => names.add(n)),
-    )
-    return Array.from(names).sort()
-  }, [batches])
-
-  const visible = useMemo(
-    () =>
-      batches
-        .filter((b) => matchesStatus(b, statusChip))
-        .filter(
-          (b) =>
-            !workerFilter ||
-            b.mason_name
-              .split(',')
-              .map((n) => n.trim().toLowerCase())
-              .includes(workerFilter.toLowerCase()),
-        ),
-    [batches, statusChip, workerFilter],
-  )
+  const visible = useMemo(() => batches.filter((b) => matchesStatus(b, statusChip)), [batches, statusChip])
 
   // Batches already arrive newest-first, so grouping preserves that order —
   // each new date just opens a new bucket the first time it's seen.
@@ -163,49 +138,9 @@ export default function BatchList() {
         ))}
       </div>
 
-      {mixers.length > 0 && (
-        <div className="quick-filter-group">
-          <span className="quick-filter-label">By person</span>
-          <div className="chip-row">
-            <button className={`chip ${!supervisorFilter ? 'chip-active' : ''}`} onClick={() => setSupervisorFilter('')}>
-              All
-            </button>
-            {mixers.map((s) => (
-              <button
-                key={s.id}
-                className={`chip ${supervisorFilter === s.id ? 'chip-active' : ''}`}
-                onClick={() => setSupervisorFilter(supervisorFilter === s.id ? '' : s.id)}
-              >
-                {s.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {formulations.length > 0 && (
-        <div className="quick-filter-group">
-          <span className="quick-filter-label">By product</span>
-          <div className="chip-row">
-            <button className={`chip ${!formulationFilter ? 'chip-active' : ''}`} onClick={() => setFormulationFilter('')}>
-              All
-            </button>
-            {formulations.map((f) => (
-              <button
-                key={f.id}
-                className={`chip ${formulationFilter === f.id ? 'chip-active' : ''}`}
-                onClick={() => setFormulationFilter(formulationFilter === f.id ? '' : f.id)}
-              >
-                {f.code}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <details className="filter-details">
-        <summary className="filter-summary">More filters</summary>
-        <div className="filter-bar">
+      <details className="filter-details" open>
+        <summary className="filter-summary">Filters</summary>
+        <div className="filter-panel">
           <label className="field">
             <span className="field-label">Date</span>
             <input
@@ -215,39 +150,81 @@ export default function BatchList() {
               onChange={(e) => setDateFilter(e.target.value)}
             />
           </label>
-          <label className="field">
-            <span className="field-label">Worker</span>
-            <select className="field-input" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
-              <option value="">All</option>
-              {workerOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {testers.length > 0 && (
-            <label className="field">
-              <span className="field-label">Tester</span>
-              <select className="field-input" value={testerFilter} onChange={(e) => setTesterFilter(e.target.value)}>
-                <option value="">All</option>
-                {testers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
+
+          {mixers.length > 0 && (
+            <div className="field">
+              <span className="field-label">Person</span>
+              <div className="chip-row">
+                <button
+                  className={`chip ${!supervisorFilter ? 'chip-active' : ''}`}
+                  onClick={() => setSupervisorFilter('')}
+                >
+                  All
+                </button>
+                {mixers.map((s) => (
+                  <button
+                    key={s.id}
+                    className={`chip ${supervisorFilter === s.id ? 'chip-active' : ''}`}
+                    onClick={() => setSupervisorFilter(supervisorFilter === s.id ? '' : s.id)}
+                  >
+                    {s.name}
+                  </button>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
           )}
-          {(dateFilter || supervisorFilter || formulationFilter || testerFilter || workerFilter) && (
+
+          {formulations.length > 0 && (
+            <div className="field">
+              <span className="field-label">Products (multi-select)</span>
+              <div className="chip-row">
+                <button
+                  className={`chip ${formulationFilters.length === 0 ? 'chip-active' : ''}`}
+                  onClick={() => setFormulationFilters([])}
+                >
+                  All
+                </button>
+                {formulations.map((f) => (
+                  <button
+                    key={f.id}
+                    className={`chip ${formulationFilters.includes(f.id) ? 'chip-active' : ''}`}
+                    onClick={() => toggleFormulation(f.id)}
+                  >
+                    {f.code}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {testers.length > 0 && (
+            <div className="field">
+              <span className="field-label">Tester</span>
+              <div className="chip-row">
+                <button className={`chip ${!testerFilter ? 'chip-active' : ''}`} onClick={() => setTesterFilter('')}>
+                  All
+                </button>
+                {testers.map((t) => (
+                  <button
+                    key={t.id}
+                    className={`chip ${testerFilter === t.id ? 'chip-active' : ''}`}
+                    onClick={() => setTesterFilter(testerFilter === t.id ? '' : t.id)}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(dateFilter || supervisorFilter || formulationFilters.length > 0 || testerFilter) && (
             <button
               className="link-btn"
               onClick={() => {
                 setDateFilter('')
                 setSupervisorFilter('')
-                setFormulationFilter('')
+                setFormulationFilters([])
                 setTesterFilter('')
-                setWorkerFilter('')
               }}
             >
               Clear filters
