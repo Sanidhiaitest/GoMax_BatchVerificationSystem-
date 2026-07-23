@@ -102,6 +102,15 @@ export function IconUsers({ size = 18 }: IconProps) {
   )
 }
 
+export function IconSparkle({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M12 2.5c.4 3.4 1.2 5.7 2.4 6.9 1.2 1.2 3.5 2 6.9 2.4-3.4.4-5.7 1.2-6.9 2.4-1.2 1.2-2 3.5-2.4 6.9-.4-3.4-1.2-5.7-2.4-6.9-1.2-1.2-3.5-2-6.9-2.4 3.4-.4 5.7-1.2 6.9-2.4 1.2-1.2 2-3.5 2.4-6.9Z" />
+      <path d="M19.5 2.2c.16 1.3.46 2.2.9 2.65.45.44 1.34.74 2.6.9-1.26.16-2.15.46-2.6.9-.44.45-.74 1.35-.9 2.65-.16-1.3-.46-2.2-.9-2.65-.45-.44-1.34-.74-2.6-.9 1.26-.16 2.15-.46 2.6-.9.44-.45.74-1.35.9-2.65Z" />
+    </svg>
+  )
+}
+
 export function IconChevronDown({ size = 16 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

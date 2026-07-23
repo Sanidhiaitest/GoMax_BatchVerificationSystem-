@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import { BottomSheet, CenterPopup, CheckRow } from '../Sheet'
-import { IconCalendar, IconUsers, IconChevronDown } from '../Icons'
+import { IconCalendar, IconUsers, IconProducts, IconChevronDown } from '../Icons'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -59,6 +59,7 @@ export default function BatchList() {
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
   const [personSheetOpen, setPersonSheetOpen] = useState(false)
   const [testerSheetOpen, setTesterSheetOpen] = useState(false)
+  const [productSheetOpen, setProductSheetOpen] = useState(false)
 
   function toggleFormulation(id: string) {
     setFormulationFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -184,30 +185,17 @@ export default function BatchList() {
                 : 'Tester'}
               <IconChevronDown size={13} />
             </button>
+            <button
+              className={`filter-trigger ${formulationFilters.length > 0 ? 'has-value' : ''}`}
+              onClick={() => setProductSheetOpen(true)}
+            >
+              <IconProducts size={15} />
+              {formulationFilters.length > 0
+                ? formulations.filter((f) => formulationFilters.includes(f.id)).map((f) => f.code).join(', ')
+                : 'Product'}
+              <IconChevronDown size={13} />
+            </button>
           </div>
-
-          {formulations.length > 0 && (
-            <div className="field">
-              <span className="field-label">Products (multi-select)</span>
-              <div className="chip-row">
-                <button
-                  className={`chip ${formulationFilters.length === 0 ? 'chip-active' : ''}`}
-                  onClick={() => setFormulationFilters([])}
-                >
-                  All
-                </button>
-                {formulations.map((f) => (
-                  <button
-                    key={f.id}
-                    className={`chip ${formulationFilters.includes(f.id) ? 'chip-active' : ''}`}
-                    onClick={() => toggleFormulation(f.id)}
-                  >
-                    {f.code}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {(dateFilter || supervisorFilters.length > 0 || formulationFilters.length > 0 || testerFilters.length > 0) && (
             <button
@@ -269,6 +257,22 @@ export default function BatchList() {
         ))}
         {testerFilters.length > 0 && (
           <button className="link-btn" onClick={() => setTesterFilters([])}>
+            Clear
+          </button>
+        )}
+      </BottomSheet>
+
+      <BottomSheet open={productSheetOpen} onClose={() => setProductSheetOpen(false)} title="Product">
+        {formulations.map((f) => (
+          <CheckRow
+            key={f.id}
+            label={f.code}
+            checked={formulationFilters.includes(f.id)}
+            onToggle={() => toggleFormulation(f.id)}
+          />
+        ))}
+        {formulationFilters.length > 0 && (
+          <button className="link-btn" onClick={() => setFormulationFilters([])}>
             Clear
           </button>
         )}
@@ -347,7 +351,6 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
           </span>
           <span className="list-item-sub">
             by {batch.supervisors?.name}
-            {mixMinutes !== null && ` · ${mixMinutes}m to mix`}
             {batch.tester && ` · tested by ${batch.tester.name}`}
           </span>
         </div>
@@ -362,6 +365,12 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
           <span className="batch-row-col-label">Test</span>
           <span className={`status-chip status-chip-${test.tone}`}>{test.label}</span>
         </div>
+        {mixMinutes !== null && (
+          <div className="batch-row-col">
+            <span className="batch-row-col-label">Time</span>
+            <span className="status-chip status-chip-muted">{mixMinutes}m</span>
+          </div>
+        )}
       </div>
     </Link>
   )

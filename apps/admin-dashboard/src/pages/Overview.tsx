@@ -2,14 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../AuthContext'
-import { IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
-import type { BatchListRow } from '../types'
+import { IconMixing, IconTesting, IconAlert, IconCheck, IconSparkle } from '../Icons'
+import type { BatchListRow, FlagSeverity } from '../types'
 
 // A batch row with the extra timestamps the overview needs to describe
 // "what's happening right now" on the floor.
 interface OverviewBatch extends BatchListRow {
   started_at: string
   submitted_at: string | null
+  batch_flags: { id: string; severity: FlagSeverity; message: string }[]
 }
 
 function timeAgo(iso: string | null): string {
@@ -25,11 +26,24 @@ function timeAgo(iso: string | null): string {
 
 const today = () => new Date().toISOString().slice(0, 10)
 
+const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
+
+function worstSeverityOf(flags: { severity: string }[]): 'critical' | 'warning' | 'info' {
+  if (flags.length === 0) return 'info'
+  return flags.reduce((worst, f) => (SEVERITY_RANK[f.severity] < SEVERITY_RANK[worst] ? f.severity : worst), 'info' as string) as
+    | 'critical'
+    | 'warning'
+    | 'info'
+}
+
 export default function Overview() {
   const { adminName } = useAuth()
   const [batches, setBatches] = useState<OverviewBatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [insight, setInsight] = useState<string | null>(null)
+  const [insightLoading, setInsightLoading] = useState(true)
+  const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -37,7 +51,7 @@ export default function Overview() {
       const { data, error } = await supabase
         .from('batches')
         .select(
-          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity)',
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity, message)',
         )
         .order('started_at', { ascending: false })
         .limit(200)
@@ -45,6 +59,20 @@ export default function Overview() {
       if (error) setError(error.message)
       else setBatches((data as unknown as OverviewBatch[]) ?? [])
       setLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setInsightLoading(true)
+      const { data, error } = await supabase.functions.invoke('dashboard-insight')
+      if (cancelled) return
+      if (!error && data?.summary) setInsight(data.summary)
+      setInsightLoading(false)
     })()
     return () => {
       cancelled = true
@@ -59,6 +87,26 @@ export default function Overview() {
   const attention = useMemo(
     () => batches.filter((b) => b.batch_flags.length > 0 || b.testing_status === 'failed'),
     [batches],
+  )
+  const attentionSeverity = useMemo(
+    () =>
+      attention.map((b) => (b.testing_status === 'failed' ? 'critical' : worstSeverityOf(b.batch_flags))),
+    [attention],
+  )
+  const attentionCounts = useMemo(
+    () => ({
+      critical: attentionSeverity.filter((s) => s === 'critical').length,
+      warning: attentionSeverity.filter((s) => s === 'warning').length,
+      info: attentionSeverity.filter((s) => s === 'info').length,
+    }),
+    [attentionSeverity],
+  )
+  const visibleAttention = useMemo(
+    () =>
+      severityFilter === 'all'
+        ? attention
+        : attention.filter((_batch, i) => attentionSeverity[i] === severityFilter),
+    [attention, attentionSeverity, severityFilter],
   )
   const doneToday = useMemo(
     () => batches.filter((b) => b.status === 'submitted' && (b.submitted_at ?? '').slice(0, 10) === today()),
@@ -127,6 +175,18 @@ export default function Overview() {
             </Link>
           </div>
 
+          <div className="ai-insight-card">
+            <span className="ai-insight-icon">
+              <IconSparkle size={16} />
+            </span>
+            <div className="ai-insight-body">
+              <span className="ai-insight-label">AI Insights</span>
+              <p className="ai-insight-text">
+                {insightLoading ? 'Reading the floor…' : insight ?? 'No insight available right now.'}
+              </p>
+            </div>
+          </div>
+
           {mixing.length > 0 && (
             <section>
               <h2 className="section-title">Happening now</h2>
@@ -152,8 +212,40 @@ export default function Overview() {
           {attention.length > 0 && (
             <section>
               <h2 className="section-title">Needs attention · {attention.length}</h2>
+              <div className="chip-row">
+                <button
+                  className={`chip ${severityFilter === 'all' ? 'chip-active' : ''}`}
+                  onClick={() => setSeverityFilter('all')}
+                >
+                  All
+                </button>
+                {attentionCounts.critical > 0 && (
+                  <button
+                    className={`chip chip-critical ${severityFilter === 'critical' ? 'chip-active' : ''}`}
+                    onClick={() => setSeverityFilter('critical')}
+                  >
+                    Critical · {attentionCounts.critical}
+                  </button>
+                )}
+                {attentionCounts.warning > 0 && (
+                  <button
+                    className={`chip chip-warning ${severityFilter === 'warning' ? 'chip-active' : ''}`}
+                    onClick={() => setSeverityFilter('warning')}
+                  >
+                    Warning · {attentionCounts.warning}
+                  </button>
+                )}
+                {attentionCounts.info > 0 && (
+                  <button
+                    className={`chip chip-info ${severityFilter === 'info' ? 'chip-active' : ''}`}
+                    onClick={() => setSeverityFilter('info')}
+                  >
+                    Info · {attentionCounts.info}
+                  </button>
+                )}
+              </div>
               <div className="activity-list">
-                {attention.map((b) => (
+                {visibleAttention.map((b) => (
                   <ActivityRow key={b.id} batch={b} kind="attention" />
                 ))}
               </div>
@@ -190,29 +282,30 @@ function ActivityRow({
 }) {
   const product = batch.formulations?.code ?? '?'
   const flagCount = batch.batch_flags.length
+  const worstMessage = kind === 'attention' && !flagCount ? null : batch.batch_flags[0]?.message ?? null
 
-  let icon = '●'
+  let icon = <IconCheck size={14} />
   let tag: { label: string; cls: string } | null = null
 
   if (kind === 'mixing') {
-    icon = '🔵'
+    icon = <IconMixing size={14} />
     tag = { label: `${timeAgo(batch.started_at)} elapsed`, cls: 'activity-tag-live' }
   } else if (kind === 'testing') {
-    icon = '🧪'
+    icon = <IconTesting size={14} />
     tag = {
       label: batch.testing_status === 'in_progress' ? 'Testing' : 'Awaiting test',
       cls: 'activity-tag-info',
     }
   } else if (kind === 'attention') {
     if (batch.testing_status === 'failed') {
-      icon = '✗'
+      icon = <IconAlert size={14} />
       tag = { label: 'Test failed', cls: 'activity-tag-fail' }
     } else {
-      icon = '⚠️'
+      icon = <IconAlert size={14} />
       tag = { label: `${flagCount} flag${flagCount > 1 ? 's' : ''}`, cls: 'activity-tag-warn' }
     }
   } else {
-    icon = batch.testing_status === 'passed' ? '✓' : '✓'
+    icon = <IconCheck size={14} />
     tag = { label: timeAgo(batch.submitted_at) + ' ago', cls: 'activity-tag-muted' }
   }
 
@@ -229,6 +322,7 @@ function ActivityRow({
           by {batch.supervisors?.name}
           {batch.tester && ` · tested by ${batch.tester.name}`}
         </span>
+        {worstMessage && <span className="activity-message">{worstMessage}</span>}
       </span>
       {tag && <span className={`activity-tag ${tag.cls}`}>{tag.label}</span>}
     </Link>
