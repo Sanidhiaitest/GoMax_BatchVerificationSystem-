@@ -164,7 +164,9 @@ export default function BatchList() {
               onClick={() => setDateSheetOpen(true)}
             >
               <IconCalendar size={15} />
-              {dateFilter ? new Date(dateFilter).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Date'}
+              <span className="filter-trigger-label">
+                {dateFilter ? new Date(dateFilter).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Date'}
+              </span>
               <IconChevronDown size={13} />
             </button>
             <button
@@ -172,9 +174,11 @@ export default function BatchList() {
               onClick={() => setPersonSheetOpen(true)}
             >
               <IconUsers size={15} />
-              {supervisorFilters.length > 0
-                ? mixers.filter((s) => supervisorFilters.includes(s.id)).map((s) => s.name).join(', ')
-                : 'Person'}
+              <span className="filter-trigger-label">
+                {supervisorFilters.length > 0
+                  ? mixers.filter((s) => supervisorFilters.includes(s.id)).map((s) => s.name).join(', ')
+                  : 'Person'}
+              </span>
               <IconChevronDown size={13} />
             </button>
             <button
@@ -182,9 +186,11 @@ export default function BatchList() {
               onClick={() => setTesterSheetOpen(true)}
             >
               <IconUsers size={15} />
-              {testerFilters.length > 0
-                ? testers.filter((t) => testerFilters.includes(t.id)).map((t) => t.name).join(', ')
-                : 'Tester'}
+              <span className="filter-trigger-label">
+                {testerFilters.length > 0
+                  ? testers.filter((t) => testerFilters.includes(t.id)).map((t) => t.name).join(', ')
+                  : 'Tester'}
+              </span>
               <IconChevronDown size={13} />
             </button>
             <button
@@ -192,9 +198,11 @@ export default function BatchList() {
               onClick={() => setProductSheetOpen(true)}
             >
               <IconProducts size={15} />
-              {formulationFilters.length > 0
-                ? formulations.filter((f) => formulationFilters.includes(f.id)).map((f) => f.code).join(', ')
-                : 'Product'}
+              <span className="filter-trigger-label">
+                {formulationFilters.length > 0
+                  ? formulations.filter((f) => formulationFilters.includes(f.id)).map((f) => f.code).join(', ')
+                  : 'Product'}
+              </span>
               <IconChevronDown size={13} />
             </button>
           </div>
@@ -309,7 +317,7 @@ export default function BatchList() {
   )
 }
 
-function BatchRow({ batch }: { batch: BatchListRow }) {
+export function BatchRow({ batch }: { batch: BatchListRow }) {
   const worstSeverity = batch.batch_flags.length
     ? batch.batch_flags.reduce(
         (worst, f) => (SEVERITY_RANK[f.severity] < SEVERITY_RANK[worst] ? f.severity : worst),

@@ -3,8 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
 import ProductImage from '../ProductImage'
+import { BatchRow } from './BatchList'
 import { IconCamera, IconTrash, IconPower } from '../Icons'
-import type { Formulation, FormulationMaterial } from '../types'
+import type { Formulation, FormulationMaterial, BatchListRow } from '../types'
 
 export default function FormulationDetail() {
   const { formulationId } = useParams<{ formulationId: string }>()
@@ -64,7 +65,69 @@ export default function FormulationDetail() {
 
       <GroupingEditor formulation={formulation} onSaved={load} />
       <MaterialsEditor formulationId={formulation.id} />
+      <ProductionLog formulationId={formulation.id} />
     </div>
+  )
+}
+
+// Every batch made of this product, with who supervised it, whether it
+// passed testing, and any flags — one screen instead of hunting through
+// the full batch list. Each row drills into the existing batch detail
+// page for the full materials-added/skipped checklist and lab report.
+function ProductionLog({ formulationId }: { formulationId: string }) {
+  const [batches, setBatches] = useState<BatchListRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('batches')
+        .select(
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity)',
+        )
+        .eq('formulation_id', formulationId)
+        .order('started_at', { ascending: false })
+        .limit(25)
+      if (cancelled) return
+      if (error) setError(error.message)
+      else setBatches((data as unknown as BatchListRow[]) ?? [])
+      setLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [formulationId])
+
+  const passed = batches.filter((b) => b.testing_status === 'passed').length
+  const flagged = batches.filter((b) => b.batch_flags.length > 0 || b.testing_status === 'failed').length
+
+  return (
+    <section>
+      <h2 className="section-title">
+        Production log
+        {batches.length > 0 && (
+          <span className="hint-text">
+            {batches.length} batch{batches.length === 1 ? '' : 'es'} · {passed} passed
+            {flagged > 0 ? ` · ${flagged} flagged` : ''}
+          </span>
+        )}
+      </h2>
+      {error && <p className="error-text">{error}</p>}
+      {loading ? (
+        <p className="hint-text">Loading…</p>
+      ) : batches.length === 0 ? (
+        <p className="hint-text">No batches produced with this formulation yet.</p>
+      ) : (
+        <div className="list">
+          {batches.map((b) => (
+            <BatchRow key={b.id} batch={b} />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 

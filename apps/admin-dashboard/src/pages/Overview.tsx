@@ -10,7 +10,14 @@ import type { BatchListRow, FlagSeverity } from '../types'
 interface OverviewBatch extends BatchListRow {
   started_at: string
   submitted_at: string | null
+  supervisor_id: string
+  tester_id: string | null
   batch_flags: { id: string; severity: FlagSeverity; message: string }[]
+}
+
+interface PersonOption {
+  id: string
+  name: string
 }
 
 function timeAgo(iso: string | null): string {
@@ -44,6 +51,8 @@ export default function Overview() {
   const [insight, setInsight] = useState<string | null>(null)
   const [insightLoading, setInsightLoading] = useState(true)
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all')
+  const [people, setPeople] = useState<PersonOption[]>([])
+  const [personFilter, setPersonFilter] = useState<string>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -51,7 +60,7 @@ export default function Overview() {
       const { data, error } = await supabase
         .from('batches')
         .select(
-          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity, message)',
+          'id, batch_number, batch_date, mason_name, status, started_at, submitted_at, testing_status, supervisor_id, tester_id, formulations(code, name), supervisors!batches_supervisor_id_fkey(name), tester:supervisors!batches_tester_id_fkey(name), batch_flags(id, severity, message)',
         )
         .order('started_at', { ascending: false })
         .limit(200)
@@ -59,6 +68,17 @@ export default function Overview() {
       if (error) setError(error.message)
       else setBatches((data as unknown as OverviewBatch[]) ?? [])
       setLoading(false)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase.from('supervisors_public').select('id, name').eq('active', true).order('name')
+      if (!cancelled) setPeople((data as PersonOption[]) ?? [])
     })()
     return () => {
       cancelled = true
@@ -121,15 +141,40 @@ export default function Overview() {
     [batches],
   )
 
+  // Health + activity infographics can be scoped to one person (supervisor
+  // or tester) so Ravinder ji can switch between e.g. Bobby and Nanshul and
+  // see just their numbers, instead of only ever seeing the plant-wide mix.
+  const scopedBatches = useMemo(
+    () =>
+      personFilter === 'all'
+        ? batches
+        : batches.filter((b) => b.supervisor_id === personFilter || b.tester_id === personFilter),
+    [batches, personFilter],
+  )
+  const scopedDoneToday = useMemo(
+    () => scopedBatches.filter((b) => b.status === 'submitted' && (b.submitted_at ?? '').slice(0, 10) === today()),
+    [scopedBatches],
+  )
+  const scopedMixing = useMemo(() => scopedBatches.filter((b) => b.status === 'in_progress'), [scopedBatches])
+
   // Real, computed-from-data health metrics — no fabricated trend data.
-  const tested = useMemo(() => batches.filter((b) => b.testing_status === 'passed' || b.testing_status === 'failed'), [batches])
+  const tested = useMemo(
+    () => scopedBatches.filter((b) => b.testing_status === 'passed' || b.testing_status === 'failed'),
+    [scopedBatches],
+  )
   const passRate = tested.length > 0 ? Math.round((tested.filter((b) => b.testing_status === 'passed').length / tested.length) * 100) : null
   const cleanRate =
-    batches.length > 0
-      ? Math.round((batches.filter((b) => b.batch_flags.length === 0 && b.testing_status !== 'failed').length / batches.length) * 100)
+    scopedBatches.length > 0
+      ? Math.round(
+          (scopedBatches.filter((b) => b.batch_flags.length === 0 && b.testing_status !== 'failed').length /
+            scopedBatches.length) *
+            100,
+        )
       : null
   const completionRate =
-    doneToday.length + mixing.length > 0 ? Math.round((doneToday.length / (doneToday.length + mixing.length)) * 100) : null
+    scopedDoneToday.length + scopedMixing.length > 0
+      ? Math.round((scopedDoneToday.length / (scopedDoneToday.length + scopedMixing.length)) * 100)
+      : null
 
   // Real activity-by-time-of-day chart — batches actually started today,
   // bucketed into 4-hour windows from their real started_at timestamp.
@@ -141,7 +186,7 @@ export default function Overview() {
     { label: '4–8pm', from: 16, to: 20 },
     { label: '8–12am', from: 20, to: 24 },
   ]
-  const todaysBatches = useMemo(() => batches.filter((b) => b.batch_date === today()), [batches])
+  const todaysBatches = useMemo(() => scopedBatches.filter((b) => b.batch_date === today()), [scopedBatches])
   const hourCounts = useMemo(
     () =>
       HOUR_BUCKETS.map((bucket) => ({
@@ -221,9 +266,34 @@ export default function Overview() {
             </div>
           </div>
 
+          {people.length > 0 && (
+            <div className="chip-row">
+              <button
+                className={`chip ${personFilter === 'all' ? 'chip-active' : ''}`}
+                onClick={() => setPersonFilter('all')}
+              >
+                Everyone
+              </button>
+              {people.map((p) => (
+                <button
+                  key={p.id}
+                  className={`chip ${personFilter === p.id ? 'chip-active' : ''}`}
+                  onClick={() => setPersonFilter(p.id)}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="health-chart-row">
             <div className="health-panel">
-              <span className="health-panel-title">Production health</span>
+              <span className="health-panel-title">
+                Production health
+                {personFilter !== 'all' && (
+                  <span className="hint-text"> · {people.find((p) => p.id === personFilter)?.name}</span>
+                )}
+              </span>
               <HealthBar label="Test pass rate" value={passRate} tone="success" />
               <HealthBar label="Clean batches" value={cleanRate} tone="live" />
               <HealthBar label="Today's completion" value={completionRate} tone="accent" />

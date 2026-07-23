@@ -151,16 +151,17 @@ function PersonGroup({
                 </span>
               </div>
               <div className="person-actions">
-                <button className="person-action-btn" onClick={() => onResetPin(s)}>
+                <button className="person-action-btn" onClick={() => onResetPin(s)} title="Reset PIN">
                   <IconKey size={13} />
-                  Reset PIN
+                  <span className="person-action-label">Reset PIN</span>
                 </button>
                 <button
                   className={`person-action-btn ${s.active ? 'person-action-btn-danger' : 'person-action-btn-active'}`}
                   onClick={() => onToggleActive(s)}
+                  title={s.active ? 'Deactivate' : 'Activate'}
                 >
                   <IconPower size={13} />
-                  {s.active ? 'Deactivate' : 'Activate'}
+                  <span className="person-action-label">{s.active ? 'Deactivate' : 'Activate'}</span>
                 </button>
               </div>
             </div>

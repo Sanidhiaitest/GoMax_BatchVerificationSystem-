@@ -454,6 +454,13 @@ a {
   flex-shrink: 0;
 }
 
+.filter-trigger-label {
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Bottom sheet */
 .sheet-backdrop {
   position: fixed;
@@ -741,11 +748,21 @@ a {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: -0.005em;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .list-item-sub {
   color: var(--text-dim);
   font-size: 13px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .severity-badge {
@@ -1126,11 +1143,21 @@ a {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex: 1;
+}
+
+.material-editor-row-left span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .material-editor-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 /* People page actions — replaces plain text links */
@@ -1151,6 +1178,8 @@ a {
   color: var(--text-dim);
   font-size: 12px;
   font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
@@ -1171,6 +1200,20 @@ a {
 
 .person-action-btn-active:hover {
   background: var(--success-bg);
+}
+
+/* Below ~420px there isn't room for a name plus two labelled pills — drop
+   to icon-only buttons (title="" still gives the label on long-press/hover)
+   so the row stays one line instead of squeezing the name unreadable. */
+@media (max-width: 420px) {
+  .person-action-label {
+    display: none;
+  }
+
+  .person-action-btn {
+    padding: 8px;
+    border-radius: 999px;
+  }
 }
 
 .icon-btn-sm {
@@ -1542,6 +1585,13 @@ a {
   color: var(--text-dim);
 }
 
+.health-panel-title .hint-text {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 10px;
+}
+
 .health-bar-row {
   display: flex;
   flex-direction: column;
@@ -1736,9 +1786,20 @@ a {
 .batch-row-columns {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+@media (max-width: 400px) {
+  .batch-row-columns {
+    gap: 7px;
+  }
+
+  .status-chip {
+    padding: 3px 7px;
+    font-size: 10px;
+  }
 }
 
 .batch-row-col {
