@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { GoMaxWordmark } from './GoMaxLogo'
+import { IconDashboard, IconBatches, IconProducts, IconPeople } from './Icons'
 
 export default function Layout() {
   const { signOut } = useAuth()
@@ -9,28 +10,36 @@ export default function Layout() {
     <div className="app-shell">
       <nav className="bottom-nav">
         <NavLink to="/" end className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-          <span className="bottom-nav-icon">🏭</span>
-          Overview
+          <span className="bottom-nav-icon">
+            <IconDashboard />
+          </span>
+          Dashboard
         </NavLink>
         <NavLink
           to="/batches"
           className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
         >
-          <span className="bottom-nav-icon">📋</span>
+          <span className="bottom-nav-icon">
+            <IconBatches />
+          </span>
           Batches
         </NavLink>
         <NavLink
           to="/formulations"
           className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
         >
-          <span className="bottom-nav-icon">🧪</span>
+          <span className="bottom-nav-icon">
+            <IconProducts />
+          </span>
           Products
         </NavLink>
         <NavLink
           to="/supervisors"
           className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
         >
-          <span className="bottom-nav-icon">👷</span>
+          <span className="bottom-nav-icon">
+            <IconPeople />
+          </span>
           People
         </NavLink>
       </nav>

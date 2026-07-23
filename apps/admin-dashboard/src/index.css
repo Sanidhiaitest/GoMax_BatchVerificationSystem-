@@ -24,6 +24,8 @@
   --info-bg: rgba(30, 58, 95, 0.1);
   --success: #16a34a;
   --success-bg: #dcfce7;
+  --live: #e0245e;
+  --live-bg: rgba(224, 36, 94, 0.12);
   --shadow-sm: 0 1px 2px rgba(10, 22, 40, 0.06);
   --shadow-md: 0 8px 24px -6px rgba(10, 22, 40, 0.12);
   --shadow-lg: 0 24px 56px -16px rgba(10, 22, 40, 0.25);
@@ -59,6 +61,8 @@
     --info-bg: rgba(125, 162, 201, 0.14);
     --success: #4ade80;
     --success-bg: rgba(74, 222, 128, 0.14);
+    --live: #fb4b83;
+    --live-bg: rgba(251, 75, 131, 0.18);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
     --shadow-lg: 0 24px 56px -16px rgba(0, 0, 0, 0.6);
@@ -411,6 +415,176 @@ a {
 .inline-form .field-input {
   flex: 1;
   min-width: 120px;
+}
+
+/* Compact trigger buttons (Date / Person) that open a popup or sliding
+   sheet instead of showing their options inline. */
+.filter-trigger-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.filter-trigger.has-value {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent-dim);
+}
+
+.filter-trigger svg {
+  flex-shrink: 0;
+}
+
+/* Bottom sheet */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 16, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 30;
+  animation: backdrop-in 0.15s ease both;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sheet-panel {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
+  animation: sheet-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 6px auto 14px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sheet-title {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 10px 0 4px;
+}
+
+.sheet-section-label:first-child {
+  margin-top: 0;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 8px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.check-row:active {
+  background: var(--surface-2);
+}
+
+.check-row-box {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.check-row.checked .check-row-box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Small centered popup (Date) */
+.center-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 16, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  padding: 24px;
+  animation: backdrop-in 0.15s ease both;
+}
+
+.center-popup-panel {
+  width: 100%;
+  max-width: 320px;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-lg);
+  animation: popup-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popup-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .filter-panel {
@@ -977,28 +1151,25 @@ a {
    =================================================================== */
 
 /* Pulse band: four bold, tappable status tiles */
+/* Always four across, even on narrow phones — smaller padding/type
+   instead of wrapping to a 2x2 grid. */
 .pulse-band {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-@media (max-width: 460px) {
-  .pulse-band {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  gap: 8px;
 }
 
 .pulse-tile {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 16px 14px;
-  border-radius: var(--radius);
+  padding: 10px 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  min-width: 0;
 }
 
 .pulse-tile:hover {
@@ -1013,39 +1184,63 @@ a {
 }
 
 .pulse-value {
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .pulse-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+
+.pulse-icon {
+  display: flex;
   color: var(--text-dim);
 }
 
-.pulse-emoji {
-  font-size: 15px;
+.pulse-icon-live {
+  color: var(--live);
 }
 
-.pulse-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--accent);
+.pulse-icon-alert {
+  color: var(--accent);
 }
 
-.pulse-dot-live {
-  background: var(--success);
-  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+.pulse-icon-done {
+  color: var(--success);
+}
+
+/* Standalone "Live" pill — a red/pink badge, not plain text, per the
+   reference: rounded, filled, white bold uppercase label. */
+.live-badge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--live);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 0 var(--live-bg);
   animation: pulse-ring 1.8s ease-out infinite;
 }
 
+.page-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5); }
-  70% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+  0% { box-shadow: 0 0 0 0 var(--live-bg); }
+  70% { box-shadow: 0 0 0 7px rgba(224, 36, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 36, 94, 0); }
 }
 
 /* Activity rows: flat, scannable, one tap to open the batch */
@@ -1295,8 +1490,9 @@ a {
 }
 
 .bottom-nav-icon {
-  display: block;
-  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 2px;
 }
 

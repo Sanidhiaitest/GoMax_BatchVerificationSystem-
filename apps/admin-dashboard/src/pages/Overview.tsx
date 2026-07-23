@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../AuthContext'
+import { IconMixing, IconTesting, IconAlert, IconCheck } from '../Icons'
 import type { BatchListRow } from '../types'
 
 // A batch row with the extra timestamps the overview needs to describe
@@ -82,9 +83,12 @@ export default function Overview() {
           {greeting}
           {adminName ? ` ${adminName}` : ''} 👋
         </h1>
-        <p className="hint-text">
-          {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · live factory snapshot
-        </p>
+        <div className="page-meta-row">
+          <p className="hint-text">
+            {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · factory snapshot
+          </p>
+          <span className="live-badge">Live</span>
+        </div>
       </div>
 
       {error && <p className="error-text">{error}</p>}
@@ -94,22 +98,30 @@ export default function Overview() {
         <>
           <div className="pulse-band">
             <Link to="/batches?status=mixing" className="pulse-tile">
-              <span className="pulse-dot pulse-dot-live" />
+              <span className="pulse-icon pulse-icon-live">
+                <IconMixing size={15} />
+              </span>
               <span className="pulse-value">{mixing.length}</span>
               <span className="pulse-label">Mixing now</span>
             </Link>
             <Link to="/batches?status=awaiting" className="pulse-tile">
-              <span className="pulse-emoji">🧪</span>
+              <span className="pulse-icon">
+                <IconTesting size={15} />
+              </span>
               <span className="pulse-value">{awaiting.length}</span>
               <span className="pulse-label">Awaiting test</span>
             </Link>
             <Link to="/batches?status=attention" className="pulse-tile pulse-tile-alert">
-              <span className="pulse-emoji">⚠️</span>
+              <span className="pulse-icon pulse-icon-alert">
+                <IconAlert size={15} />
+              </span>
               <span className="pulse-value">{attention.length}</span>
               <span className="pulse-label">Needs attention</span>
             </Link>
             <Link to="/batches?status=today" className="pulse-tile">
-              <span className="pulse-emoji">✓</span>
+              <span className="pulse-icon pulse-icon-done">
+                <IconCheck size={15} />
+              </span>
               <span className="pulse-value">{doneToday.length}</span>
               <span className="pulse-label">Done today</span>
             </Link>

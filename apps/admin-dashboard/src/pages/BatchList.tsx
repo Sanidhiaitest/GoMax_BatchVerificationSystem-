@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Avatar from '../Avatar'
+import { BottomSheet, CenterPopup, CheckRow } from '../Sheet'
+import { IconCalendar, IconUsers, IconChevronDown } from '../Icons'
 import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
@@ -50,12 +52,23 @@ export default function BatchList() {
   const statusChip = searchParams.get('status') ?? 'all'
 
   const [dateFilter, setDateFilter] = useState('')
-  const [supervisorFilter, setSupervisorFilter] = useState('')
+  const [supervisorFilters, setSupervisorFilters] = useState<string[]>([])
   const [formulationFilters, setFormulationFilters] = useState<string[]>([])
-  const [testerFilter, setTesterFilter] = useState('')
+  const [testerFilters, setTesterFilters] = useState<string[]>([])
+
+  const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [personSheetOpen, setPersonSheetOpen] = useState(false)
 
   function toggleFormulation(id: string) {
     setFormulationFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  function toggleSupervisor(id: string) {
+    setSupervisorFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  function toggleTester(id: string) {
+    setTesterFilters((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
   const mixers = useMemo(() => supervisors.filter((s) => s.role === 'supervisor'), [supervisors])
@@ -92,9 +105,9 @@ export default function BatchList() {
         .limit(200)
 
       if (dateFilter) query = query.eq('batch_date', dateFilter)
-      if (supervisorFilter) query = query.eq('supervisor_id', supervisorFilter)
+      if (supervisorFilters.length > 0) query = query.in('supervisor_id', supervisorFilters)
       if (formulationFilters.length > 0) query = query.in('formulation_id', formulationFilters)
-      if (testerFilter) query = query.eq('tester_id', testerFilter)
+      if (testerFilters.length > 0) query = query.in('tester_id', testerFilters)
 
       const { data, error } = await query
       if (cancelled) return
@@ -105,7 +118,7 @@ export default function BatchList() {
     return () => {
       cancelled = true
     }
-  }, [dateFilter, supervisorFilter, formulationFilters, testerFilter])
+  }, [dateFilter, supervisorFilters, formulationFilters, testerFilters])
 
   const visible = useMemo(() => batches.filter((b) => matchesStatus(b, statusChip)), [batches, statusChip])
 
@@ -141,38 +154,26 @@ export default function BatchList() {
       <details className="filter-details" open>
         <summary className="filter-summary">Filters</summary>
         <div className="filter-panel">
-          <label className="field">
-            <span className="field-label">Date</span>
-            <input
-              className="field-input"
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-          </label>
-
-          {mixers.length > 0 && (
-            <div className="field">
-              <span className="field-label">Person</span>
-              <div className="chip-row">
-                <button
-                  className={`chip ${!supervisorFilter ? 'chip-active' : ''}`}
-                  onClick={() => setSupervisorFilter('')}
-                >
-                  All
-                </button>
-                {mixers.map((s) => (
-                  <button
-                    key={s.id}
-                    className={`chip ${supervisorFilter === s.id ? 'chip-active' : ''}`}
-                    onClick={() => setSupervisorFilter(supervisorFilter === s.id ? '' : s.id)}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="filter-trigger-row">
+            <button
+              className={`filter-trigger ${dateFilter ? 'has-value' : ''}`}
+              onClick={() => setDateSheetOpen(true)}
+            >
+              <IconCalendar size={15} />
+              {dateFilter ? new Date(dateFilter).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Date'}
+              <IconChevronDown size={13} />
+            </button>
+            <button
+              className={`filter-trigger ${supervisorFilters.length + testerFilters.length > 0 ? 'has-value' : ''}`}
+              onClick={() => setPersonSheetOpen(true)}
+            >
+              <IconUsers size={15} />
+              {supervisorFilters.length + testerFilters.length > 0
+                ? `Person · ${supervisorFilters.length + testerFilters.length}`
+                : 'Person & tester'}
+              <IconChevronDown size={13} />
+            </button>
+          </div>
 
           {formulations.length > 0 && (
             <div className="field">
@@ -197,34 +198,14 @@ export default function BatchList() {
             </div>
           )}
 
-          {testers.length > 0 && (
-            <div className="field">
-              <span className="field-label">Tester</span>
-              <div className="chip-row">
-                <button className={`chip ${!testerFilter ? 'chip-active' : ''}`} onClick={() => setTesterFilter('')}>
-                  All
-                </button>
-                {testers.map((t) => (
-                  <button
-                    key={t.id}
-                    className={`chip ${testerFilter === t.id ? 'chip-active' : ''}`}
-                    onClick={() => setTesterFilter(testerFilter === t.id ? '' : t.id)}
-                  >
-                    {t.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(dateFilter || supervisorFilter || formulationFilters.length > 0 || testerFilter) && (
+          {(dateFilter || supervisorFilters.length > 0 || formulationFilters.length > 0 || testerFilters.length > 0) && (
             <button
               className="link-btn"
               onClick={() => {
                 setDateFilter('')
-                setSupervisorFilter('')
+                setSupervisorFilters([])
                 setFormulationFilters([])
-                setTesterFilter('')
+                setTesterFilters([])
               }}
             >
               Clear filters
@@ -232,6 +213,61 @@ export default function BatchList() {
           )}
         </div>
       </details>
+
+      <CenterPopup open={dateSheetOpen} onClose={() => setDateSheetOpen(false)} title="Date">
+        <input
+          className="field-input"
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          autoFocus
+        />
+        {dateFilter && (
+          <button className="link-btn" onClick={() => setDateFilter('')}>
+            Clear date
+          </button>
+        )}
+      </CenterPopup>
+
+      <BottomSheet open={personSheetOpen} onClose={() => setPersonSheetOpen(false)} title="Person & tester">
+        {mixers.length > 0 && (
+          <>
+            <p className="sheet-section-label">Person</p>
+            {mixers.map((s) => (
+              <CheckRow
+                key={s.id}
+                label={s.name}
+                checked={supervisorFilters.includes(s.id)}
+                onToggle={() => toggleSupervisor(s.id)}
+              />
+            ))}
+          </>
+        )}
+        {testers.length > 0 && (
+          <>
+            <p className="sheet-section-label">Tester</p>
+            {testers.map((t) => (
+              <CheckRow
+                key={t.id}
+                label={t.name}
+                checked={testerFilters.includes(t.id)}
+                onToggle={() => toggleTester(t.id)}
+              />
+            ))}
+          </>
+        )}
+        {(supervisorFilters.length > 0 || testerFilters.length > 0) && (
+          <button
+            className="link-btn"
+            onClick={() => {
+              setSupervisorFilters([])
+              setTesterFilters([])
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </BottomSheet>
 
       {error && <p className="error-text">{error}</p>}
       {loading && <p className="hint-text">Loading…</p>}
