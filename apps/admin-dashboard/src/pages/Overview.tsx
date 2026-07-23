@@ -214,9 +214,8 @@ function ActivityRow({
           {product} · #{batch.batch_number}
         </span>
         <span className="activity-sub">
-          {batch.supervisors?.name}
-          {batch.mason_name ? ` · ${batch.mason_name}` : ''}
-          {kind === 'done' && batch.tester && ` · tested by ${batch.tester.name}`}
+          by {batch.supervisors?.name}
+          {batch.tester && ` · tested by ${batch.tester.name}`}
         </span>
       </span>
       {tag && <span className={`activity-tag ${tag.cls}`}>{tag.label}</span>}

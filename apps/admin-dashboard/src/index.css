@@ -1247,8 +1247,14 @@ a {
   color: var(--text-dim);
 }
 
-.batch-row-flag {
-  margin-left: 4px;
+/* Flagged batches get an outline on the whole row instead of a third
+   badge cluttering the Prep/Test pair. */
+.batch-row-flagged {
+  border: 1.5px solid var(--warning);
+}
+
+.batch-row-flagged-critical {
+  border-color: var(--danger);
 }
 
 .status-chip {

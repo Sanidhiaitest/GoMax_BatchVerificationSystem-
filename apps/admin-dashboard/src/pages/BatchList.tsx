@@ -317,7 +317,10 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
       : null
 
   return (
-    <Link to={`/batch/${batch.id}`} className="list-item batch-row batch-row-v2">
+    <Link
+      to={`/batch/${batch.id}`}
+      className={`list-item batch-row batch-row-v2 ${worstSeverity ? `batch-row-flagged batch-row-flagged-${worstSeverity}` : ''}`}
+    >
       <div className="batch-row-left">
         <Avatar name={batch.formulations?.code ?? '?'} />
         <div className="batch-row-main">
@@ -341,11 +344,6 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
           <span className="batch-row-col-label">Test</span>
           <span className={`status-chip status-chip-${test.tone}`}>{test.label}</span>
         </div>
-        {worstSeverity && (
-          <span className={`severity-badge severity-${worstSeverity} batch-row-flag`}>
-            {batch.batch_flags.length} flag{batch.batch_flags.length > 1 ? 's' : ''}
-          </span>
-        )}
       </div>
     </Link>
   )
