@@ -6,14 +6,14 @@ import type { BatchListRow, Formulation, SupervisorPublic } from '../types'
 
 const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 }
 
-const TESTING_LABEL: Record<string, string> = {
-  pending: '🧪 Awaiting test',
-  in_progress: '🧪 Testing',
-  passed: '✓ Passed',
-  failed: '✗ Failed',
-}
-
 const today = () => new Date().toISOString().slice(0, 10)
+const yesterday = () => new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+
+function dateGroupLabel(dateStr: string): string {
+  if (dateStr === today()) return 'Today'
+  if (dateStr === yesterday()) return 'Yesterday'
+  return new Date(dateStr).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+}
 
 // Quick status chips — the primary, click-first way to slice the list.
 const STATUS_CHIPS: { key: string; label: string }[] = [
@@ -134,6 +134,19 @@ export default function BatchList() {
     [batches, statusChip, workerFilter],
   )
 
+  // Batches already arrive newest-first, so grouping preserves that order —
+  // each new date just opens a new bucket the first time it's seen.
+  const groups = useMemo(() => {
+    const buckets: { label: string; rows: BatchListRow[] }[] = []
+    for (const b of visible) {
+      const label = dateGroupLabel(b.batch_date)
+      const bucket = buckets[buckets.length - 1]
+      if (bucket && bucket.label === label) bucket.rows.push(b)
+      else buckets.push({ label, rows: [b] })
+    }
+    return buckets
+  }, [visible])
+
   return (
     <div className="page">
       <h1 className="page-title">Batches</h1>
@@ -150,86 +163,96 @@ export default function BatchList() {
         ))}
       </div>
 
+      {mixers.length > 0 && (
+        <div className="quick-filter-group">
+          <span className="quick-filter-label">By person</span>
+          <div className="chip-row">
+            <button className={`chip ${!supervisorFilter ? 'chip-active' : ''}`} onClick={() => setSupervisorFilter('')}>
+              All
+            </button>
+            {mixers.map((s) => (
+              <button
+                key={s.id}
+                className={`chip ${supervisorFilter === s.id ? 'chip-active' : ''}`}
+                onClick={() => setSupervisorFilter(supervisorFilter === s.id ? '' : s.id)}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {formulations.length > 0 && (
+        <div className="quick-filter-group">
+          <span className="quick-filter-label">By product</span>
+          <div className="chip-row">
+            <button className={`chip ${!formulationFilter ? 'chip-active' : ''}`} onClick={() => setFormulationFilter('')}>
+              All
+            </button>
+            {formulations.map((f) => (
+              <button
+                key={f.id}
+                className={`chip ${formulationFilter === f.id ? 'chip-active' : ''}`}
+                onClick={() => setFormulationFilter(formulationFilter === f.id ? '' : f.id)}
+              >
+                {f.code}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <details className="filter-details">
         <summary className="filter-summary">More filters</summary>
         <div className="filter-bar">
-        <label className="field">
-          <span className="field-label">Date</span>
-          <input
-            className="field-input"
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">Logged in by</span>
-          <select
-            className="field-input"
-            value={supervisorFilter}
-            onChange={(e) => setSupervisorFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            {mixers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span className="field-label">Worker</span>
-          <select className="field-input" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
-            <option value="">All</option>
-            {workerOptions.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span className="field-label">Formulation</span>
-          <select
-            className="field-input"
-            value={formulationFilter}
-            onChange={(e) => setFormulationFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            {formulations.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.code}
-              </option>
-            ))}
-          </select>
-        </label>
-        {testers.length > 0 && (
           <label className="field">
-            <span className="field-label">Tester</span>
-            <select className="field-input" value={testerFilter} onChange={(e) => setTesterFilter(e.target.value)}>
+            <span className="field-label">Date</span>
+            <input
+              className="field-input"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Worker</span>
+            <select className="field-input" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
               <option value="">All</option>
-              {testers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+              {workerOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
           </label>
-        )}
-        {(dateFilter || supervisorFilter || formulationFilter || testerFilter || workerFilter) && (
-          <button
-            className="link-btn"
-            onClick={() => {
-              setDateFilter('')
-              setSupervisorFilter('')
-              setFormulationFilter('')
-              setTesterFilter('')
-              setWorkerFilter('')
-            }}
-          >
-            Clear filters
-          </button>
-        )}
+          {testers.length > 0 && (
+            <label className="field">
+              <span className="field-label">Tester</span>
+              <select className="field-input" value={testerFilter} onChange={(e) => setTesterFilter(e.target.value)}>
+                <option value="">All</option>
+                {testers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {(dateFilter || supervisorFilter || formulationFilter || testerFilter || workerFilter) && (
+            <button
+              className="link-btn"
+              onClick={() => {
+                setDateFilter('')
+                setSupervisorFilter('')
+                setFormulationFilter('')
+                setTesterFilter('')
+                setWorkerFilter('')
+              }}
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </details>
 
@@ -245,11 +268,16 @@ export default function BatchList() {
           {visible.length === 0 ? (
             <p className="hint-text">No batches here right now.</p>
           ) : (
-            <div className="list">
-              {visible.map((b) => (
-                <BatchRow key={b.id} batch={b} />
-              ))}
-            </div>
+            groups.map((g) => (
+              <div key={g.label} className="date-group">
+                <p className="date-group-label">{g.label}</p>
+                <div className="list">
+                  {g.rows.map((b) => (
+                    <BatchRow key={b.id} batch={b} />
+                  ))}
+                </div>
+              </div>
+            ))
           )}
         </section>
       )}
@@ -265,8 +293,31 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
       )
     : null
 
+  const prep: { label: string; tone: string } =
+    batch.status === 'in_progress' ? { label: 'Mixing', tone: 'live' } : { label: 'Done', tone: 'success' }
+
+  const test: { label: string; tone: string } = (() => {
+    switch (batch.testing_status) {
+      case 'not_sent':
+        return { label: 'Not sent', tone: 'muted' }
+      case 'pending':
+        return { label: 'Waiting', tone: 'warning' }
+      case 'in_progress':
+        return { label: 'In progress', tone: 'warning' }
+      case 'passed':
+        return { label: 'Passed', tone: 'success' }
+      case 'failed':
+        return { label: 'Failed', tone: 'critical' }
+    }
+  })()
+
+  const mixMinutes =
+    batch.submitted_at && batch.started_at
+      ? Math.round((new Date(batch.submitted_at).getTime() - new Date(batch.started_at).getTime()) / 60000)
+      : null
+
   return (
-    <Link to={`/batch/${batch.id}`} className="list-item batch-row">
+    <Link to={`/batch/${batch.id}`} className="list-item batch-row batch-row-v2">
       <div className="batch-row-left">
         <Avatar name={batch.formulations?.code ?? '?'} />
         <div className="batch-row-main">
@@ -274,20 +325,24 @@ function BatchRow({ batch }: { batch: BatchListRow }) {
             {batch.formulations?.code} · #{batch.batch_number}
           </span>
           <span className="list-item-sub">
-            {batch.supervisors?.name} · {batch.mason_name} · {batch.batch_date}
-            {batch.status === 'in_progress' && ' · in progress'}
+            by {batch.supervisors?.name}
+            {mixMinutes !== null && ` · ${mixMinutes}m to mix`}
             {batch.tester && ` · tested by ${batch.tester.name}`}
           </span>
         </div>
       </div>
-      <div className="batch-row-badges">
-        {batch.testing_status !== 'not_sent' && (
-          <span className={`severity-badge severity-${batch.testing_status === 'failed' ? 'critical' : batch.testing_status === 'passed' ? 'success' : 'warning'}`}>
-            {TESTING_LABEL[batch.testing_status]}
-          </span>
-        )}
+
+      <div className="batch-row-columns">
+        <div className="batch-row-col">
+          <span className="batch-row-col-label">Prep</span>
+          <span className={`status-chip status-chip-${prep.tone}`}>{prep.label}</span>
+        </div>
+        <div className="batch-row-col">
+          <span className="batch-row-col-label">Test</span>
+          <span className={`status-chip status-chip-${test.tone}`}>{test.label}</span>
+        </div>
         {worstSeverity && (
-          <span className={`severity-badge severity-${worstSeverity}`}>
+          <span className={`severity-badge severity-${worstSeverity} batch-row-flag`}>
             {batch.batch_flags.length} flag{batch.batch_flags.length > 1 ? 's' : ''}
           </span>
         )}

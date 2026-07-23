@@ -204,9 +204,11 @@ function ActivityRow({
     tag = { label: timeAgo(batch.submitted_at) + ' ago', cls: 'activity-tag-muted' }
   }
 
+  const iconTone = tag?.cls.replace('activity-tag-', 'activity-icon-') ?? ''
+
   return (
     <Link to={`/batch/${batch.id}`} className="activity-row">
-      <span className="activity-icon">{icon}</span>
+      <span className={`activity-icon ${iconTone}`}>{icon}</span>
       <span className="activity-main">
         <span className="activity-title">
           {product} · #{batch.batch_number}
@@ -214,6 +216,7 @@ function ActivityRow({
         <span className="activity-sub">
           {batch.supervisors?.name}
           {batch.mason_name ? ` · ${batch.mason_name}` : ''}
+          {kind === 'done' && batch.tester && ` · tested by ${batch.tester.name}`}
         </span>
       </span>
       {tag && <span className={`activity-tag ${tag.cls}`}>{tag.label}</span>}
